@@ -25,6 +25,16 @@ export function convertToHours(value, unit) {
 }
 
 /**
+ * Parse date string correctly (avoids timezone issues)
+ * @param {string} dateString - Date in YYYY-MM-DD format
+ * @returns {Date}
+ */
+function parseDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed
+}
+
+/**
  * Calculate finish date from total time
  * @param {number} totalValue - Total time needed
  * @param {string} totalUnit - Unit of total time
@@ -48,8 +58,8 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
   const totalWorkdays = totalHours / hoursPerDay;
   const totalWorkdaysFormatted = Number(totalWorkdays.toFixed(1));
   
-  // Step 2: Find finish date by counting workdays
-  let currentDate = new Date(startDate);
+  // Step 2: Find finish date by counting workdays (use parseDate to avoid timezone issues)
+  let currentDate = parseDate(startDate);
   let remainingWorkdays = totalWorkdays;
   let workdaysCount = 0;
   
@@ -70,8 +80,8 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
   
   const finishDate = new Date(currentDate);
   
-  // Step 3: Calculate calendar days
-  const start = new Date(startDate);
+  // Step 3: Calculate calendar days (use parseDate for start date)
+  const start = parseDate(startDate);
   const calendarDays = Math.floor((finishDate - start) / (1000 * 60 * 60 * 24)) + 1;
   
   // Step 4: Calculate weeks and remaining days
