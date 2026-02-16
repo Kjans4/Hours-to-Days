@@ -1,48 +1,66 @@
+import { useState } from 'react'
 import Calendar from './Calendar'
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
 
 function TimelineCalendar({ 
-  startDateString,     // "2026-03-18"
-  finishDateString,    // "2026-06-10"
-  workingDaysArray     // [{ date: "2026-03-18", type: "start" }, ...]
+  startDateString,
+  finishDateString,
+  workingDaysArray
 }) {
-  // Get all months between start and finish
+  const [isExpanded, setIsExpanded] = useState(false)
   const months = getMonthsBetween(startDateString, finishDateString)
 
   return (
     <div className="timeline-calendar">
-      <h3 className="timeline-title">📅 Project Timeline</h3>
-      
-      {/* Legend */}
-      <div className="timeline-legend">
-        <span className="legend-item">
-          <span className="legend-color start"></span> Start Date
+      {/* Collapse/Expand Button */}
+      <button 
+        className="timeline-toggle"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span className="timeline-toggle-icon">
+          {isExpanded ? '▼' : '▶'}
         </span>
-        <span className="legend-item">
-          <span className="legend-color workday"></span> Working Days
+        <span className="timeline-title">📅 Project Timeline</span>
+        <span className="timeline-months-count">
+          ({months.length} {months.length === 1 ? 'month' : 'months'})
         </span>
-        <span className="legend-item">
-          <span className="legend-color finish"></span> Finish Date
-        </span>
-      </div>
+      </button>
 
-      {/* Calendar Grid */}
-      <div className="timeline-grid">
-        {months.map(({ year, month }) => {
-          const datesForMonth = filterDatesForMonth(workingDaysArray, year, month)
-          
-          return (
-            <Calendar
-              key={`${year}-${month}`}
-              year={year}
-              month={month}
-              highlightedDates={datesForMonth}
-              onDayClick={null}
-              showNavigation={false}
-            />
-          )
-        })}
-      </div>
+      {/* Collapsible Content */}
+      {isExpanded && (
+        <>
+          {/* Legend */}
+          <div className="timeline-legend">
+            <span className="legend-item">
+              <span className="legend-color start"></span> Start Date
+            </span>
+            <span className="legend-item">
+              <span className="legend-color workday"></span> Working Days
+            </span>
+            <span className="legend-item">
+              <span className="legend-color finish"></span> Finish Date
+            </span>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="timeline-grid">
+            {months.map(({ year, month }) => {
+              const datesForMonth = filterDatesForMonth(workingDaysArray, year, month)
+              
+              return (
+                <Calendar
+                  key={`${year}-${month}`}
+                  year={year}
+                  month={month}
+                  highlightedDates={datesForMonth}
+                  onDayClick={null}
+                  showNavigation={false}
+                />
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
