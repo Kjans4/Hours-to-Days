@@ -8,17 +8,14 @@ const TIME_UNITS = {
   hour: 1,
   day: 24,
   week: 168,
-  month: 730, // ~30.42 days average
-  year: 8760, // 365 days
+  month: 730,
+  year: 8760,
   decade: 87600,
   century: 876000
 };
 
 /**
  * Convert any time unit to hours
- * @param {number} value - The value to convert
- * @param {string} unit - The unit to convert from
- * @returns {number} - Value in hours
  */
 export function convertToHours(value, unit) {
   return value * TIME_UNITS[unit];
@@ -26,39 +23,70 @@ export function convertToHours(value, unit) {
 
 /**
  * Parse date string correctly (avoids timezone issues)
- * @param {string} dateString - Date in YYYY-MM-DD format
- * @returns {Date}
  */
 function parseDate(dateString) {
   const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Format Date to YYYY-MM-DD
+ */
+function formatDateToYYYYMMDD(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Generate array of all working days in project
+ * @returns {Array} - [{ date: 'YYYY-MM-DD', type: 'start|workday|finish' }]
+ */
+export function generateWorkingDaysArray(startDate, finishDate, workingDays) {
+  const daysArray = []
+  let currentDate = new Date(startDate)
+  const lastDate = new Date(finishDate)
+  
+  while (currentDate <= lastDate) {
+    const dayOfWeek = currentDate.getDay()
+    const dateString = formatDateToYYYYMMDD(currentDate)
+    
+    if (workingDays.includes(dayOfWeek)) {
+      let type = 'workday'
+      
+      // Mark start date
+      if (currentDate.getTime() === startDate.getTime()) {
+        type = 'start'
+      }
+      // Mark finish date
+      else if (currentDate.getTime() === lastDate.getTime()) {
+        type = 'finish'
+      }
+      
+      daysArray.push({ date: dateString, type })
+    }
+    
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+  
+  return daysArray
 }
 
 /**
  * Calculate finish date from total time
- * @param {number} totalValue - Total time needed
- * @param {string} totalUnit - Unit of total time
- * @param {number} dailyValue - Time worked per day
- * @param {string} dailyUnit - Unit of daily time
- * @param {number[]} workingDays - Array of working day numbers (0=Sun, 1=Mon, etc.)
- * @param {string} startDate - Starting date in YYYY-MM-DD format
- * @returns {Object} - { workdays, finishDate, calendarDays, weeks, remainingDays, steps }
  */
 export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit, workingDays, startDate) {
-  // Validate inputs
   if (!totalValue || !dailyValue || workingDays.length === 0) {
     return null;
   }
 
-  // Convert both values to hours
   const totalHours = convertToHours(totalValue, totalUnit);
   const hoursPerDay = convertToHours(dailyValue, dailyUnit);
 
-  // Step 1: Calculate total workdays needed
   const totalWorkdays = totalHours / hoursPerDay;
   const totalWorkdaysFormatted = Number(totalWorkdays.toFixed(1));
   
-  // Step 2: Find finish date by counting workdays (use parseDate to avoid timezone issues)
   let currentDate = parseDate(startDate);
   let remainingWorkdays = totalWorkdays;
   let workdaysCount = 0;
@@ -66,29 +94,23 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
   while (remainingWorkdays > 0) {
     const dayOfWeek = currentDate.getDay();
     
-    // If this is a working day, subtract 1 workday
     if (workingDays.includes(dayOfWeek)) {
       remainingWorkdays -= 1;
       workdaysCount += 1;
     }
     
-    // Move to next day if we're not done
     if (remainingWorkdays > 0) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
   }
   
   const finishDate = new Date(currentDate);
-  
-  // Step 3: Calculate calendar days (use parseDate for start date)
   const start = parseDate(startDate);
   const calendarDays = Math.floor((finishDate - start) / (1000 * 60 * 60 * 24)) + 1;
   
-  // Step 4: Calculate weeks and remaining days
   const weeks = Math.floor(calendarDays / 7);
   const remainingDays = calendarDays % 7;
   
-  // Step 5: Generate calculation steps
   const steps = [
     `${totalValue} ${totalUnit}${totalValue !== 1 ? 's' : ''} = ${totalHours.toFixed(1)} hours`,
     `${dailyValue} ${dailyUnit}${dailyValue !== 1 ? 's' : ''} per day = ${hoursPerDay.toFixed(1)} hours/day`,
@@ -101,6 +123,10 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
   return {
     workdays: totalWorkdaysFormatted,
     finishDate,
+    startDate: start,
+    startDateString: formatDateToYYYYMMDD(start),
+    finishDateString: formatDateToYYYYMMDD(finishDate),
+    workingDaysArray: generateWorkingDaysArray(start, finishDate, workingDays),
     calendarDays,
     weeks,
     remainingDays,
@@ -112,8 +138,6 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
 
 /**
  * Format date to readable string
- * @param {Date} date 
- * @returns {string}
  */
 function formatDate(date) {
   return date.toLocaleDateString('en-US', { 

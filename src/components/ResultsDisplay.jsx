@@ -1,3 +1,5 @@
+import TimelineCalendar from './TimelineCalendar'
+
 function ResultsDisplay({ result }) {
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -32,6 +34,13 @@ function ResultsDisplay({ result }) {
           {result.remainingDays > 0 && ` + ${result.remainingDays} ${result.remainingDays === 1 ? 'day' : 'days'}`}
         </strong>
       </div>
+
+      {/* Timeline Calendar - NEW! */}
+      <TimelineCalendar 
+        startDateString={result.startDateString}
+        finishDateString={result.finishDateString}
+        workingDaysArray={result.workingDaysArray}
+      />
 
       {/* Calculation Steps */}
       <div className="calculation-steps">

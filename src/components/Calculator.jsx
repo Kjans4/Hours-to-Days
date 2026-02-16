@@ -48,6 +48,7 @@ function Calculator() {
       workingDays,
       startDate
     )
+    console.log('Working days array:', result.workingDaysArray)
     setResult(result)
   }
 
