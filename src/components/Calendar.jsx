@@ -3,25 +3,20 @@ import { getMonthName } from '../utils/dateHelpers'
 function Calendar({ 
   year, 
   month, 
-  highlightedDates = [],  // [{ date: "2026-03-18", type: "start" }]
-  onDayClick = null,      // Function or null for read-only
+  highlightedDates = [],
+  onDayClick = null,
   showNavigation = false,
   onPrevMonth,
   onNextMonth
 }) {
-  // Get first day of month (0 = Sunday, 6 = Saturday)
   const firstDay = new Date(year, month, 1).getDay()
-  
-  // Get last date of month
   const lastDate = new Date(year, month + 1, 0).getDate()
   
-  // Create map for quick lookup
   const highlightMap = {}
   highlightedDates.forEach(item => {
     highlightMap[item.date] = item.type
   })
   
-  // Check if date is today
   const isToday = (day) => {
     const today = new Date()
     return (
@@ -31,14 +26,12 @@ function Calendar({
     )
   }
   
-  // Get date string for a specific day
   const getDateString = (day) => {
     const monthStr = String(month + 1).padStart(2, '0')
     const dayStr = String(day).padStart(2, '0')
     return `${year}-${monthStr}-${dayStr}`
   }
   
-  // Render empty cells before first day
   const renderEmptyCells = () => {
     const cells = []
     for (let i = 0; i < firstDay; i++) {
@@ -47,7 +40,6 @@ function Calendar({
     return cells
   }
   
-  // Render day cells
   const renderDays = () => {
     const days = []
     for (let day = 1; day <= lastDate; day++) {
@@ -65,7 +57,7 @@ function Calendar({
           className={className}
           onClick={() => onDayClick && onDayClick(dateString)}
         >
-          {day}
+          <span>{day}</span>
         </div>
       )
     }
@@ -74,7 +66,6 @@ function Calendar({
 
   return (
     <div className="calendar">
-      {/* Header */}
       <div className="calendar-header">
         {showNavigation && (
           <button onClick={onPrevMonth} className="calendar-nav-btn">◀</button>
@@ -87,7 +78,6 @@ function Calendar({
         )}
       </div>
 
-      {/* Weekday labels */}
       <div className="calendar-weekdays">
         <div>Sun</div>
         <div>Mon</div>
@@ -98,7 +88,6 @@ function Calendar({
         <div>Sat</div>
       </div>
 
-      {/* Days grid */}
       <div className="calendar-days">
         {renderEmptyCells()}
         {renderDays()}

@@ -1,70 +1,121 @@
-/* Reset & Base Styles */
+/* ============================================ */
+/* RESET & BASE STYLES */
+/* ============================================ */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #1f2937;
-  line-height: 1.6;
+:root {
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --hover-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --border-radius-lg: 24px;
+  --border-radius-md: 12px;
+  --border-radius-sm: 8px;
+  --transition: all 0.3s ease;
 }
 
-/* App Container */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(to bottom, #f5f7fa, #eaedf2);
+  color: #1f2937;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============================================ */
+/* APP CONTAINER */
+/* ============================================ */
+
 .app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Header */
+/* ============================================ */
+/* HEADER */
+/* ============================================ */
+
 .app-header {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: var(--primary-gradient);
   color: white;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.app-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.1;
 }
 
 .app-header h1 {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .app-header p {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   opacity: 0.95;
+  position: relative;
+  z-index: 1;
 }
 
-/* Main Content */
+/* ============================================ */
+/* MAIN CONTENT */
+/* ============================================ */
+
 main {
   flex: 1;
-  max-width: 700px;
+  max-width: 900px;
   width: 100%;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
 }
 
-/* Calculator Card */
+/* ============================================ */
+/* CALCULATOR CARD */
+/* ============================================ */
+
 .calculator {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  padding: 2.5rem;
+  transition: var(--transition);
 }
 
-/* Input Groups */
+.calculator:hover {
+  box-shadow: var(--hover-shadow);
+}
+
+/* ============================================ */
+/* INPUT GROUPS */
+/* ============================================ */
+
 .input-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .input-group label {
   display: block;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
   color: #374151;
   font-size: 0.95rem;
 }
@@ -72,186 +123,27 @@ main {
 .input-group input[type="number"],
 .input-group input[type="date"] {
   width: 100%;
-  padding: 0.75rem;
+  padding: 1rem;
   border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   font-size: 1rem;
-  transition: border-color 0.2s;
+  font-weight: 600;
+  transition: var(--transition);
+  background: #f9fafb;
 }
 
 .input-group input[type="number"]:focus,
 .input-group input[type="date"]:focus {
   outline: none;
   border-color: #2563eb;
-}
-
-/* Weekday Selector */
-.weekday-selector {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-.weekday-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.weekday-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #2563eb;
-}
-
-.weekday-checkbox span {
-  font-size: 0.95rem;
-  color: #4b5563;
-}
-
-/* Calculate Button */
-.calculate-button {
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  margin-top: 1rem;
-}
-
-.calculate-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-}
-
-.calculate-button:active {
-  transform: translateY(0);
-}
-
-.calculate-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Results Display */
-.results {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
-}
-
-.results h2 {
-  font-size: 1.5rem;
-  color: #1f2937;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.results h2::before {
-  content: "📊";
-}
-
-.result-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
   background: white;
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
-
-.result-item span {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
-.result-item strong {
-  color: #2563eb;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-/* Calculation Steps */
-.calculation-steps {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid #e5e7eb;
-}
-
-.calculation-steps h3 {
-  font-size: 1.2rem;
-  color: #374151;
-  margin-bottom: 0.75rem;
-}
-
-.calculation-steps ol {
-  margin-left: 1.5rem;
-}
-
-.calculation-steps li {
-  margin-bottom: 0.5rem;
-  color: #6b7280;
-  line-height: 1.6;
-}
-
-/* Footer */
-.app-footer {
-  background: #1f2937;
-  color: #9ca3af;
-  text-align: center;
-  padding: 1.5rem;
-  margin-top: auto;
-}
-
-.app-footer p {
-  font-size: 0.9rem;
-}
-
-/* Responsive Design */
-@media (max-width: 640px) {
-  .app-header h1 {
-    font-size: 2rem;
-  }
-
-  .app-header p {
-    font-size: 1rem;
-  }
-
-  .calculator {
-    padding: 1.5rem;
-  }
-
-  main {
-    margin: 1rem auto;
-  }
-
-  .weekday-selector {
-    gap: 0.5rem;
-  }
-}
-
-/* Add this after .input-group styles */
 
 /* Input with Unit Selector */
 .input-with-unit {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .input-with-unit input[type="number"] {
@@ -260,23 +152,566 @@ main {
 }
 
 .input-with-unit select {
-  flex: 0 0 140px;
-  padding: 0.75rem;
+  flex: 0 0 160px;
+  padding: 1rem;
   border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   font-size: 1rem;
-  background: white;
+  font-weight: 600;
+  background: #f9fafb;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: var(--transition);
 }
 
 .input-with-unit select:focus {
   outline: none;
   border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Mobile responsiveness for input-with-unit */
-@media (max-width: 640px) {
+/* ============================================ */
+/* WEEKDAY SELECTOR */
+/* ============================================ */
+
+.weekday-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.weekday-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition);
+}
+
+.weekday-checkbox:hover {
+  background: #f3f4f6;
+}
+
+.weekday-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.weekday-checkbox span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* ============================================ */
+/* CALCULATE BUTTON */
+/* ============================================ */
+
+.calculate-button {
+  width: 100%;
+  padding: 1.25rem;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.calculate-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.calculate-button:active {
+  transform: translateY(-1px);
+}
+
+.calculate-button:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================ */
+/* RESULTS DISPLAY */
+/* ============================================ */
+
+.results {
+  margin-top: 2.5rem;
+  padding: 2rem;
+  background: linear-gradient(to bottom, #f9fafb, #ffffff);
+  border-radius: var(--border-radius-lg);
+  border: 2px solid #e5e7eb;
+  box-shadow: var(--card-shadow);
+}
+
+.results h2 {
+  font-size: 1.6rem;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.results h2::before {
+  content: "📊";
+  font-size: 1.8rem;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1rem;
+  border: 2px solid #f3f4f6;
+  transition: var(--transition);
+}
+
+.result-item:hover {
+  border-color: #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.result-item span {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.result-item strong {
+  color: #2563eb;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* ============================================ */
+/* CALCULATION STEPS */
+/* ============================================ */
+
+.calculation-steps {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.calculation-steps h3 {
+  font-size: 1.3rem;
+  color: #374151;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.calculation-steps ol {
+  margin-left: 1.5rem;
+}
+
+.calculation-steps li {
+  margin-bottom: 0.75rem;
+  color: #6b7280;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ============================================ */
+/* CALENDAR STYLES */
+/* ============================================ */
+
+.calendar {
+  --side-padding: 16px;
+  --border-radius: 24px;
+  --accent-br: 12px;
+  
+  background: linear-gradient(to bottom, #f3f4f6, #fff);
+  border-radius: var(--border-radius);
+  padding: 0;
+  border: none;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  width: 100%;
+  max-width: none;
+}
+
+.calendar-header {
+  background-color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px var(--side-padding);
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}
+
+.calendar-month-year {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.calendar-nav-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.calendar-nav-btn:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-nav-btn:active {
+  transform: translateY(0);
+}
+
+.calendar-weekdays {
+  background-color: #fff;
+  padding: 0 var(--side-padding) 16px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  gap: 8px;
+}
+
+.calendar-weekdays div {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #9ca3af;
+  padding: 10px 0;
+}
+
+.calendar-days {
+  padding: 12px var(--side-padding) 24px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-day {
+  --day-height: 60px;
+  
+  height: var(--day-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  position: relative;
+  border-radius: var(--accent-br);
+  transition: all 0.2s ease;
+}
+
+/* THIS IS KEY - Date number must be on top */
+.calendar-day span {
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.calendar-day::before {
+  content: "";
+  position: absolute;
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: var(--accent-br);
+  transition: background-color 0.2s ease;
+  z-index: 1;
+}
+
+/* Empty days */
+.calendar-day.empty {
+  cursor: default;
+  color: transparent;
+  pointer-events: none;
+}
+
+.calendar-day.empty::before {
+  display: none;
+}
+
+/* Hover effect */
+.calendar-day:not(.start):not(.workday):not(.finish):not(.empty):hover::before {
+  background-color: #f3f4f6;
+}
+
+/* Start date - GREEN */
+.calendar-day.start {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.calendar-day.start::before {
+  background-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  border-top-left-radius: var(--accent-br);
+  border-bottom-left-radius: var(--accent-br);
+  z-index: 2;
+}
+
+.calendar-day.start::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  border-radius: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  width: 8px;
+  height: 3px;
+  z-index: 11;
+}
+
+/* Working days - LIGHT BLUE */
+.calendar-day.workday {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.calendar-day.workday::before {
+  background-color: #dbeafe;
+  border-radius: 0;
+  z-index: 2;
+}
+
+/* Finish date - ORANGE */
+.calendar-day.finish {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.calendar-day.finish::before {
+  background-color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  border-top-right-radius: var(--accent-br);
+  border-bottom-right-radius: var(--accent-br);
+  z-index: 2;
+}
+
+/* Today indicator */
+.calendar-day.today::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  z-index: 11;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.5);
+}
+
+.calendar-day.start.today::after,
+.calendar-day.finish.today::after {
+  background-color: #fff;
+}
+
+/* Range edges */
+.calendar-day.start:not(.finish)::before {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.calendar-day.finish:not(.start)::before {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.calendar-day.start.finish::before {
+  border-radius: var(--accent-br);
+}
+
+/* ============================================ */
+/* TIMELINE CALENDAR */
+/* ============================================ */
+
+.timeline-calendar {
+  margin-top: 2.5rem;
+  padding: 0;
+  background: linear-gradient(to bottom, #f9fafb, #fff);
+  border-radius: var(--border-radius-lg);
+  border: none;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.timeline-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: left;
+  transition: var(--transition);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.timeline-toggle:hover {
+  background: #f9fafb;
+}
+
+.timeline-toggle-icon {
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.timeline-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  flex: 1;
+}
+
+.timeline-months-count {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 700;
+  background: #f3f4f6;
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 2rem 1.5rem 2rem;
+  flex-wrap: wrap;
+  background: white;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.legend-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.legend-color.start {
+  background: #10b981;
+}
+
+.legend-color.workday {
+  background: #dbeafe;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.legend-color.finish {
+  background: #f59e0b;
+}
+
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 2rem;
+  padding: 0 2rem 2rem 2rem;
+}
+
+/* ============================================ */
+/* FOOTER */
+/* ============================================ */
+
+.app-footer {
+  background: #1f2937;
+  color: #9ca3af;
+  text-align: center;
+  padding: 2rem;
+  margin-top: auto;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.app-footer p {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 2.25rem;
+  }
+
+  .app-header p {
+    font-size: 1rem;
+  }
+
+  .calculator {
+    padding: 2rem;
+  }
+
+  main {
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+  }
+
+  .calendar-day {
+    --day-height: 52px;
+    font-size: 1rem;
+  }
+
+  .timeline-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
   .input-with-unit {
     flex-direction: column;
   }
@@ -287,232 +722,44 @@ main {
   }
 }
 
-/* ============================================ */
-/* CALENDAR STYLES */
-/* ============================================ */
-
-.calendar {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.calendar-month-year {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.calendar-nav-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.calendar-nav-btn:hover {
-  background: #1e40af;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-}
-
-.calendar-weekdays div {
-  padding: 0.5rem 0;
-}
-
-.calendar-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  transition: all 0.2s;
-  color: #374151;
-}
-
-.calendar-day.empty {
-  background: transparent;
-}
-
-.calendar-day.clickable {
-  cursor: pointer;
-}
-
-.calendar-day.clickable:hover {
-  background: #e0e7ff;
-}
-
-/* Highlighted days */
-.calendar-day.start {
-  background: #10b981;
-  color: white;
-  font-weight: bold;
-}
-
-.calendar-day.workday {
-  background: #3b82f6;
-  color: white;
-}
-
-.calendar-day.finish {
-  background: #f59e0b;
-  color: white;
-  font-weight: bold;
-}
-
-/* Today indicator */
-.calendar-day.today {
-  box-shadow: 0 0 0 2px #ef4444;
-}
-
-/* ============================================ */
-/* TIMELINE CALENDAR STYLES */
-/* ============================================ */
-
-.timeline-calendar {
-  margin-top: 2rem;
-  padding: 0;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px solid #e5e7eb;
-  overflow: hidden;
-}
-
-/* Toggle Button */
-.timeline-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  background: white;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  text-align: left;
-  transition: background 0.2s;
-}
-
-.timeline-toggle:hover {
-  background: #f9fafb;
-}
-
-.timeline-toggle-icon {
-  font-size: 0.9rem;
-  color: #6b7280;
-  transition: transform 0.2s;
-}
-
-.timeline-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
-  flex: 1;
-}
-
-.timeline-months-count {
-  font-size: 0.9rem;
-  color: #6b7280;
-  font-weight: normal;
-}
-
-.timeline-legend {
-  display: flex;
-  gap: 1.5rem;
-  margin: 1.5rem 1.5rem 1rem 1.5rem;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: #4b5563;
-}
-
-.legend-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.legend-color.start {
-  background: #10b981;
-}
-
-.legend-color.workday {
-  background: #3b82f6;
-}
-
-.legend-color.finish {
-  background: #f59e0b;
-}
-
-.timeline-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 640px) {
-  .timeline-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 480px) {
+  .app-header {
+    padding: 2rem 1rem;
   }
 
-  .timeline-toggle {
-    padding: 0.875rem 1rem;
+  .app-header h1 {
+    font-size: 2rem;
   }
 
-  .timeline-title {
-    font-size: 1rem;
+  .calculator {
+    padding: 1.5rem;
   }
 
-  .timeline-months-count {
-    font-size: 0.85rem;
+  .calendar {
+    --side-padding: 12px;
+    --border-radius: 20px;
   }
 
   .calendar-day {
-    font-size: 0.85rem;
+    --day-height: 48px;
+    font-size: 0.95rem;
+  }
+
+  .weekday-selector {
+    gap: 0.75rem;
+  }
+
+  .timeline-toggle {
+    padding: 1.25rem 1.5rem;
   }
 
   .timeline-legend {
-    font-size: 0.85rem;
-    margin: 1rem 1rem 0.75rem 1rem;
+    margin: 1.5rem;
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .timeline-grid {
+    padding: 0 1.5rem 1.5rem 1.5rem;
   }
 }
