@@ -1,0 +1,196 @@
+/* ============================================ */
+/* EXCLUDE DATE COMPONENT */
+/* ============================================ */
+
+.holiday-container {
+  margin-top: 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.holiday-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.holiday-toggle:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.holiday-toggle.expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-color: #2563eb;
+  background: #f8fafc;
+}
+
+.holiday-toggle .count {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 700;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.holiday-content {
+  padding: 0;
+  background: linear-gradient(to bottom, #f3f4f6, #fff);
+  border: 2px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+  overflow: hidden;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-wrapper {
+  padding: 0;
+}
+
+.calendar-header h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.calendar-header button {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.calendar-header button:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 12px 16px 20px;
+}
+
+.weekday-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.day-btn {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  background-color: white;
+  border: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.day-btn:hover:not(.excluded) {
+  background-color: #e5e7eb;
+}
+
+.day-btn.excluded {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.dates-list-wrapper {
+  background: white;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.date-tag button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+}
+
+.empty-msg {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.clear-btn {
+  display: block;
+  margin: 1rem auto 0;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.clear-btn:hover {
+  color: #ef4444;
+}

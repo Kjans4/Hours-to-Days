@@ -1,0 +1,114 @@
+/* ============================================ */
+/* CALCULATOR CARD & INPUTS */
+/* ============================================ */
+
+.calculator {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  padding: 2.5rem;
+  transition: var(--transition);
+}
+
+.calculator:hover {
+  box-shadow: var(--hover-shadow);
+}
+
+/* Input Groups */
+.input-group {
+  margin-bottom: 1.75rem;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.input-group input[type="number"],
+.input-group input[type="date"] {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--transition);
+  background: #f9fafb;
+}
+
+.input-group input[type="number"]:focus,
+.input-group input[type="date"]:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Input with Unit Selector */
+.input-with-unit {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.input-with-unit input[type="number"] {
+  flex: 1;
+  width: auto;
+}
+
+.input-with-unit select {
+  flex: 0 0 160px;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.input-with-unit select:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Weekday Selector */
+.weekday-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.weekday-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition);
+}
+
+.weekday-checkbox:hover {
+  background: #f3f4f6;
+}
+
+.weekday-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.weekday-checkbox span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4b5563;
+}
