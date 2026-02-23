@@ -10,9 +10,11 @@ function TimelineCalendar({
   const [isExpanded, setIsExpanded] = useState(false)
   const months = getMonthsBetween(startDateString, finishDateString)
 
+  // COUNT EXCLUDED DATES
+  const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
+
   return (
     <div className="timeline-calendar">
-      {/* Collapse/Expand Button */}
       <button 
         className="timeline-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -26,10 +28,9 @@ function TimelineCalendar({
         </span>
       </button>
 
-      {/* Collapsible Content */}
       {isExpanded && (
         <>
-          {/* Legend */}
+          {/* Legend - ADD EXCLUDED */}
           <div className="timeline-legend">
             <span className="legend-item">
               <span className="legend-color start"></span> Start Date
@@ -40,6 +41,11 @@ function TimelineCalendar({
             <span className="legend-item">
               <span className="legend-color finish"></span> Finish Date
             </span>
+            {excludedCount > 0 && (
+              <span className="legend-item">
+                <span className="legend-color excluded"></span> Excluded ({excludedCount})
+              </span>
+            )}
           </div>
 
           {/* Calendar Grid */}

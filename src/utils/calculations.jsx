@@ -41,9 +41,9 @@ function formatDateToYYYYMMDD(date) {
 
 /**
  * Generate array of all working days in project
- * @returns {Array} - [{ date: 'YYYY-MM-DD', type: 'start|workday|finish' }]
+ * NOW INCLUDES EXCLUDED DATES
  */
-export function generateWorkingDaysArray(startDate, finishDate, workingDays) {
+export function generateWorkingDaysArray(startDate, finishDate, workingDays, excludedDates = []) {
   const daysArray = []
   let currentDate = new Date(startDate)
   const lastDate = new Date(finishDate)
@@ -52,7 +52,12 @@ export function generateWorkingDaysArray(startDate, finishDate, workingDays) {
     const dayOfWeek = currentDate.getDay()
     const dateString = formatDateToYYYYMMDD(currentDate)
     
-    if (workingDays.includes(dayOfWeek)) {
+    // CHECK IF EXCLUDED FIRST
+    if (excludedDates.includes(dateString)) {
+      daysArray.push({ date: dateString, type: 'excluded' })
+    }
+    // THEN CHECK IF WORKING DAY
+    else if (workingDays.includes(dayOfWeek)) {
       let type = 'workday'
       
       // Mark start date
@@ -75,8 +80,17 @@ export function generateWorkingDaysArray(startDate, finishDate, workingDays) {
 
 /**
  * Calculate finish date from total time
+ * NOW HANDLES EXCLUDED DATES
  */
-export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit, workingDays, startDate) {
+export function calculateFinishDate(
+  totalValue, 
+  totalUnit, 
+  dailyValue, 
+  dailyUnit, 
+  workingDays, 
+  startDate,
+  excludedDates = []  // NEW PARAMETER
+) {
   if (!totalValue || !dailyValue || workingDays.length === 0) {
     return null;
   }
@@ -91,10 +105,16 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
   let remainingWorkdays = totalWorkdays;
   let workdaysCount = 0;
   
+  // UPDATED LOGIC: Skip excluded dates
   while (remainingWorkdays > 0) {
     const dayOfWeek = currentDate.getDay();
+    const dateString = formatDateToYYYYMMDD(currentDate);
     
-    if (workingDays.includes(dayOfWeek)) {
+    // Check if it's a working day AND not excluded
+    const isWorkingDay = workingDays.includes(dayOfWeek);
+    const isExcluded = excludedDates.includes(dateString);
+    
+    if (isWorkingDay && !isExcluded) {
       remainingWorkdays -= 1;
       workdaysCount += 1;
     }
@@ -115,10 +135,13 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
     `${totalValue} ${totalUnit}${totalValue !== 1 ? 's' : ''} = ${totalHours.toFixed(1)} hours`,
     `${dailyValue} ${dailyUnit}${dailyValue !== 1 ? 's' : ''} per day = ${hoursPerDay.toFixed(1)} hours/day`,
     `${totalHours.toFixed(1)} hours ÷ ${hoursPerDay.toFixed(1)} hours/day = ${totalWorkdaysFormatted} workdays`,
+    excludedDates.length > 0 
+      ? `Excluding ${excludedDates.length} holiday${excludedDates.length !== 1 ? 's' : ''}`
+      : null,
     `Starting ${formatDate(start)}, count ${totalWorkdaysFormatted} workdays on selected days`,
     `Finish date = ${formatDate(finishDate)}`,
     `Total calendar time = ${weeks} ${weeks === 1 ? 'week' : 'weeks'}${remainingDays > 0 ? ` + ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}` : ''}`
-  ];
+  ].filter(Boolean);  // Remove null step if no excluded dates
   
   return {
     workdays: totalWorkdaysFormatted,
@@ -126,7 +149,7 @@ export function calculateFinishDate(totalValue, totalUnit, dailyValue, dailyUnit
     startDate: start,
     startDateString: formatDateToYYYYMMDD(start),
     finishDateString: formatDateToYYYYMMDD(finishDate),
-    workingDaysArray: generateWorkingDaysArray(start, finishDate, workingDays),
+    workingDaysArray: generateWorkingDaysArray(start, finishDate, workingDays, excludedDates),  // PASS excludedDates
     calendarDays,
     weeks,
     remainingDays,

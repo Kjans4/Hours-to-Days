@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
+import ExcludeDate from './ExcludeDate' // New Import
 
 function Calculator() {
-  // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0]
-  
-  // Get available time units
   const timeUnits = getTimeUnits()
   
-  // State
+  // Existing State
   const [totalValue, setTotalValue] = useState(500)
   const [totalUnit, setTotalUnit] = useState('hour')
   const [dailyValue, setDailyValue] = useState(8)
   const [dailyUnit, setDailyUnit] = useState('hour')
   const [startDate, setStartDate] = useState(today)
-  const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5]) // Mon-Fri
+  const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5])
+  
+  // --- NEW STATE FOR HOLIDAYS ---
+  const [excludedDates, setExcludedDates] = useState([])
   const [result, setResult] = useState(null)
 
-  // Weekdays configuration
   const weekdays = [
     { value: 0, label: 'Sun' },
     { value: 1, label: 'Mon' },
@@ -29,7 +29,6 @@ function Calculator() {
     { value: 6, label: 'Sat' },
   ]
 
-  // Toggle weekday selection
   const toggleDay = (dayValue) => {
     setWorkingDays(prev =>
       prev.includes(dayValue)
@@ -38,7 +37,15 @@ function Calculator() {
     )
   }
 
-  // Calculate finish date
+  // --- NEW TOGGLE LOGIC FOR EXCLUDED DATES ---
+  const toggleExcludedDate = (dateString) => {
+    setExcludedDates(prev =>
+      prev.includes(dateString)
+        ? prev.filter(d => d !== dateString)
+        : [...prev, dateString].sort()
+    )
+  }
+
   const handleCalculate = () => {
     const result = calculateFinishDate(
       parseFloat(totalValue),
@@ -46,18 +53,17 @@ function Calculator() {
       parseFloat(dailyValue),
       dailyUnit,
       workingDays,
-      startDate
+      startDate,
+      excludedDates // <-- Pass the new array here
     )
     console.log('Working days array:', result.workingDaysArray)
     setResult(result)
   }
 
-  // Check if calculate button should be disabled
   const isDisabled = !totalValue || !dailyValue || workingDays.length === 0
 
   return (
     <div className="calculator">
-      
       {/* Total Time Input */}
       <div className="input-group">
         <label htmlFor="total-time">Total time needed:</label>
@@ -75,9 +81,7 @@ function Calculator() {
             onChange={(e) => setTotalUnit(e.target.value)}
           >
             {timeUnits.map(unit => (
-              <option key={unit.value} value={unit.value}>
-                {unit.label}
-              </option>
+              <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
           </select>
         </div>
@@ -100,9 +104,7 @@ function Calculator() {
             onChange={(e) => setDailyUnit(e.target.value)}
           >
             {timeUnits.map(unit => (
-              <option key={unit.value} value={unit.value}>
-                {unit.label}
-              </option>
+              <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
           </select>
         </div>
@@ -135,6 +137,13 @@ function Calculator() {
           ))}
         </div>
       </div>
+
+      {/* --- NEW EXCLUDE DATE COMPONENT --- */}
+      <ExcludeDate 
+        excludedDates={excludedDates}
+        onToggleDate={toggleExcludedDate}
+        onClearAll={() => setExcludedDates([])}
+      />
 
       {/* Calculate Button */}
       <button 
