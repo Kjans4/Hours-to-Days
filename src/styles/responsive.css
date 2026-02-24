@@ -38,6 +38,34 @@
     flex: 1;
     width: 100%;
   }
+
+  /* Break out of results container on mobile */
+  .results {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Timeline calendar full width on mobile */
+  .timeline-calendar {
+    margin-left: -2rem;
+    margin-right: -2rem;
+    border-radius: 0;
+  }
+
+  .timeline-toggle {
+    border-radius: 0;
+  }
+
+  .timeline-legend {
+    margin: 1.5rem 1rem 1rem 1rem;
+  }
+
+  .timeline-grid {
+    padding: 0 1rem 1.5rem 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -68,16 +96,38 @@
   }
 
   .timeline-toggle {
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 1rem;
+    font-size: 0.95rem;
   }
 
   .timeline-legend {
-    margin: 1.5rem;
+    margin: 1rem;
     padding: 1rem;
-    gap: 1.5rem;
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .legend-color {
+    width: 28px;
+    height: 28px;
   }
 
   .timeline-grid {
-    padding: 0 1.5rem 1.5rem 1.5rem;
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  /* Results container adjustments */
+  .results {
+    padding: 1.5rem 1rem;
+  }
+
+  .results h2 {
+    font-size: 1.4rem;
+  }
+
+  /* Timeline breaks out further on very small screens */
+  .timeline-calendar {
+    margin-left: -1rem;
+    margin-right: -1rem;
   }
 }
