@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
-import ExcludeDate from './ExcludeDate' // New Import
+import ExcludeDate from './ExcludeDate'
+import { useLocalStorage } from '../hooks/useLocalStorage'  // NEW IMPORT
 
 function Calculator() {
   const today = new Date().toISOString().split('T')[0]
   const timeUnits = getTimeUnits()
   
-  // Existing State
-  const [totalValue, setTotalValue] = useState(500)
-  const [totalUnit, setTotalUnit] = useState('hour')
-  const [dailyValue, setDailyValue] = useState(8)
-  const [dailyUnit, setDailyUnit] = useState('hour')
-  const [startDate, setStartDate] = useState(today)
-  const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5])
+  // REPLACE useState WITH useLocalStorage FOR PERSISTENT DATA
+  const [totalValue, setTotalValue] = useLocalStorage('totalValue', 500)
+  const [totalUnit, setTotalUnit] = useLocalStorage('totalUnit', 'hour')
+  const [dailyValue, setDailyValue] = useLocalStorage('dailyValue', 8)
+  const [dailyUnit, setDailyUnit] = useLocalStorage('dailyUnit', 'hour')
+  const [startDate, setStartDate] = useLocalStorage('startDate', today)
+  const [workingDays, setWorkingDays] = useLocalStorage('workingDays', [1, 2, 3, 4, 5])
+  const [excludedDates, setExcludedDates] = useLocalStorage('excludedDates', [])
   
-  // --- NEW STATE FOR HOLIDAYS ---
-  const [excludedDates, setExcludedDates] = useState([])
+  // KEEP useState FOR NON-PERSISTENT DATA
   const [result, setResult] = useState(null)
 
   const weekdays = [
@@ -37,7 +38,6 @@ function Calculator() {
     )
   }
 
-  // --- NEW TOGGLE LOGIC FOR EXCLUDED DATES ---
   const toggleExcludedDate = (dateString) => {
     setExcludedDates(prev =>
       prev.includes(dateString)
@@ -54,9 +54,8 @@ function Calculator() {
       dailyUnit,
       workingDays,
       startDate,
-      excludedDates // <-- Pass the new array here
+      excludedDates
     )
-    console.log('Working days array:', result.workingDaysArray)
     setResult(result)
   }
 
@@ -138,7 +137,7 @@ function Calculator() {
         </div>
       </div>
 
-      {/* --- NEW EXCLUDE DATE COMPONENT --- */}
+      {/* Exclude Date Component */}
       <ExcludeDate 
         excludedDates={excludedDates}
         onToggleDate={toggleExcludedDate}
