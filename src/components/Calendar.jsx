@@ -14,7 +14,10 @@ function Calendar({
   
   const highlightMap = {}
   highlightedDates.forEach(item => {
-    highlightMap[item.date] = item.type
+    highlightMap[item.date] = {
+      type: item.type,
+      hasNote: item.hasNote || false  // NEW
+    }
   })
   
   const isToday = (day) => {
@@ -44,10 +47,13 @@ function Calendar({
     const days = []
     for (let day = 1; day <= lastDate; day++) {
       const dateString = getDateString(day)
-      const highlightType = highlightMap[dateString]
+      const dateData = highlightMap[dateString]
+      const highlightType = dateData?.type
+      const hasNote = dateData?.hasNote
       
       let className = 'calendar-day'
       if (highlightType) className += ` ${highlightType}`
+      if (hasNote) className += ' has-note'  // NEW
       if (isToday(day)) className += ' today'
       if (onDayClick) className += ' clickable'
       

@@ -255,10 +255,10 @@
 }
 
 /* ============================================ */
-/* NOTE INDICATOR */
+/* NOTE INDICATOR STYLES */
 /* ============================================ */
 
-/* Base note indicator */
+/* Basic Note Styling */
 .calendar-day.has-note::after {
   content: "💬";
   position: absolute;
@@ -267,21 +267,19 @@
   font-size: 14px;
   z-index: 12;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
-/* Start / Finish override (they already use ::after for dots) */
-.calendar-day.start.has-note::after,
-.calendar-day.finish.has-note::after {
-  content: "💬";
-  bottom: 4px;
-  right: 4px;
+  /* Resetting potential overlaps */
+  top: auto;
+  left: auto;
+  transform: none;
   width: auto;
   height: auto;
   background: none;
-  font-size: 14px;
+  box-shadow: none;
 }
 
-/* Excluded dates with notes */
+/* Priority Fix: Replace dots/lines with Note Icon if both exist */
+.calendar-day.start.has-note::after,
+.calendar-day.finish.has-note::after,
 .calendar-day.excluded.has-note::after {
   content: "💬";
   bottom: 4px;
@@ -289,11 +287,12 @@
   width: auto;
   height: auto;
   background: none;
-  transform: none;
   font-size: 14px;
+  transform: none;
+  top: auto;
 }
 
-/* Today + Note → show both */
-.calendar-day.today.has-note::before {
-  /* Keep today indicator working */
+/* Today indicator with note - ensures Today dot stays top-right */
+.calendar-day.today.has-note::after {
+  content: "💬";
 }
