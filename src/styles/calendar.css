@@ -253,3 +253,47 @@
 .calendar-day.start.finish::before {
   border-radius: var(--accent-br);
 }
+
+/* ============================================ */
+/* NOTE INDICATOR */
+/* ============================================ */
+
+/* Base note indicator */
+.calendar-day.has-note::after {
+  content: "💬";
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 14px;
+  z-index: 12;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Start / Finish override (they already use ::after for dots) */
+.calendar-day.start.has-note::after,
+.calendar-day.finish.has-note::after {
+  content: "💬";
+  bottom: 4px;
+  right: 4px;
+  width: auto;
+  height: auto;
+  background: none;
+  font-size: 14px;
+}
+
+/* Excluded dates with notes */
+.calendar-day.excluded.has-note::after {
+  content: "💬";
+  bottom: 4px;
+  right: 4px;
+  width: auto;
+  height: auto;
+  background: none;
+  transform: none;
+  font-size: 14px;
+}
+
+/* Today + Note → show both */
+.calendar-day.today.has-note::before {
+  /* Keep today indicator working */
+}
