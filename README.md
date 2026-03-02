@@ -11,4 +11,4 @@ A modern web app that calculates project completion dates based on total hours, 
 - **Date Notes** - Add notes to specific dates to track progress
 - **Data Persistence** - All inputs saved locally in your browser
 - **Mobile Responsive** - Works seamlessly on desktop, tablet, and mobile
-
+- **To Do List** - You can add task alongside with Notes
