@@ -12,42 +12,33 @@ function TimelineCalendar({
   const [isExpanded, setIsExpanded] = useState(false)
   const months = getMonthsBetween(startDateString, finishDateString)
 
-  // Note state
   const [dateNotes, setDateNotes] = useLocalStorage('dateNotes', {})
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
 
-  // Count excluded and notes
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.keys(dateNotes).length
 
-  // Handle date click
   const handleDateClick = (dateString) => {
     setSelectedDate(dateString)
     setNoteModalOpen(true)
   }
 
-  // Save note
-  const handleSaveNote = (noteText) => {
-    setDateNotes(prev => ({
-      ...prev,
-      [selectedDate]: {
-        text: noteText,
-        timestamp: new Date().toISOString()
-      }
-    }))
+  const handleSaveNote = (data) => {
+    if (data === null) {
+      setDateNotes(prev => {
+        const updated = { ...prev }
+        delete updated[selectedDate]
+        return updated
+      })
+    } else {
+      setDateNotes(prev => ({
+        ...prev,
+        [selectedDate]: data
+      }))
+    }
   }
 
-  // Delete note
-  const handleDeleteNote = () => {
-    setDateNotes(prev => {
-      const updated = { ...prev }
-      delete updated[selectedDate]
-      return updated
-    })
-  }
-
-  // Close modal
   const handleCloseModal = () => {
     setNoteModalOpen(false)
     setSelectedDate(null)
@@ -129,7 +120,6 @@ function TimelineCalendar({
         dateString={selectedDate}
         existingNote={dateNotes[selectedDate]}
         onSave={handleSaveNote}
-        onDelete={handleDeleteNote}
       />
     </div>
   )
