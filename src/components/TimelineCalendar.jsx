@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Calendar from './Calendar'
 import NoteModal from './NoteModal'
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
@@ -10,8 +10,8 @@ function TimelineCalendar({
   workingDaysArray
 }) {
   // Always start expanded with first month visible
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [showAllMonths, setShowAllMonths] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)  // Changed from false
+  const [showAllMonths, setShowAllMonths] = useState(false)  // NEW
   
   const months = getMonthsBetween(startDateString, finishDateString)
 
@@ -23,17 +23,6 @@ function TimelineCalendar({
   // Count excluded and notes
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.keys(dateNotes).length
-
-  // Auto-collapse after 10 seconds if user doesn't interact
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isExpanded && !noteModalOpen) {
-        setIsExpanded(false)
-      }
-    }, 10000)
-    
-    return () => clearTimeout(timer)
-  }, [isExpanded, noteModalOpen])
 
   // Handle date click
   const handleDateClick = (dateString) => {
