@@ -9,21 +9,28 @@ function TimelineCalendar({
   finishDateString,
   workingDaysArray
 }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  // Always start expanded with first month visible
+  const [isExpanded, setIsExpanded] = useState(true)  // Changed from false
+  const [showAllMonths, setShowAllMonths] = useState(false)  // NEW
+  
   const months = getMonthsBetween(startDateString, finishDateString)
 
-  const [dateNotes, setDateNotes] = useLocalStorage('dateNotes', {})
+  // Note state
+  const [dateNotes, setDateNotes] = useLocalStorage('dateData', {})
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
 
+  // Count excluded and notes
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.keys(dateNotes).length
 
+  // Handle date click
   const handleDateClick = (dateString) => {
     setSelectedDate(dateString)
     setNoteModalOpen(true)
   }
 
+  // Save note/tasks
   const handleSaveNote = (data) => {
     if (data === null) {
       setDateNotes(prev => {
@@ -39,13 +46,20 @@ function TimelineCalendar({
     }
   }
 
+  // Close modal
   const handleCloseModal = () => {
     setNoteModalOpen(false)
     setSelectedDate(null)
   }
 
+  // Get months to display
+  const firstMonth = months[0]
+  const remainingMonths = months.slice(1)
+  const monthsToShow = showAllMonths ? months : [firstMonth]
+
   return (
     <div className="timeline-calendar">
+      {/* Toggle Header */}
       <button 
         className="timeline-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -86,7 +100,7 @@ function TimelineCalendar({
 
           {/* Calendar Grid */}
           <div className="timeline-grid">
-            {months.map(({ year, month }) => {
+            {monthsToShow.map(({ year, month }) => {
               const datesForMonth = filterDatesForMonth(workingDaysArray, year, month)
               
               // Add note indicator to dates
@@ -110,6 +124,28 @@ function TimelineCalendar({
               )
             })}
           </div>
+
+          {/* Show More/Less Button - Only if more than 1 month */}
+          {remainingMonths.length > 0 && (
+            <div className="timeline-expand-section">
+              <button
+                className="timeline-expand-btn"
+                onClick={() => setShowAllMonths(!showAllMonths)}
+              >
+                {showAllMonths ? (
+                  <>
+                    <span>Hide additional months</span>
+                    <span className="expand-icon">▲</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Show {remainingMonths.length} more {remainingMonths.length === 1 ? 'month' : 'months'}</span>
+                    <span className="expand-icon">▼</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -118,7 +154,7 @@ function TimelineCalendar({
         isOpen={noteModalOpen}
         onClose={handleCloseModal}
         dateString={selectedDate}
-        existingNote={dateNotes[selectedDate]}
+        existingData={dateNotes[selectedDate]}
         onSave={handleSaveNote}
       />
     </div>
