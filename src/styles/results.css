@@ -1,20 +1,20 @@
 /* ============================================ */
-/* RESULTS DISPLAY */
+/* RESULTS - COMPACT VERSION */
 /* ============================================ */
 
 .results {
-  margin-top: 2.5rem;
-  padding: 2rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem;
   background: linear-gradient(to bottom, #f9fafb, #ffffff);
-  border-radius: var(--border-radius-lg);
+  border-radius: 16px;
   border: 2px solid #e5e7eb;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .results h2 {
-  font-size: 1.6rem;
+  font-size: 1.25rem;
   color: #1f2937;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -23,60 +23,71 @@
 
 .results h2::before {
   content: "📊";
-  font-size: 1.8rem;
+  font-size: 1.5rem;
 }
 
 .result-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   background: white;
-  border-radius: var(--border-radius-md);
-  margin-bottom: 1rem;
-  border: 2px solid #f3f4f6;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #f3f4f6;
   transition: var(--transition);
 }
 
 .result-item:hover {
   border-color: #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .result-item span {
   color: #6b7280;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
 .result-item strong {
   color: #2563eb;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
-/* Calculation Steps */
+/* Calculation Steps - Compact */
 .calculation-steps {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
   border-top: 2px solid #e5e7eb;
 }
 
 .calculation-steps h3 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: #374151;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-weight: 700;
 }
 
 .calculation-steps ol {
-  margin-left: 1.5rem;
+  margin-left: 1.25rem;
 }
 
 .calculation-steps li {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   color: #6b7280;
-  line-height: 1.7;
-  font-size: 0.95rem;
+  line-height: 1.5;
+  font-size: 0.875rem;
   font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .results {
+    padding: 1rem;
+  }
+
+  .result-item {
+    padding: 0.625rem 0.875rem;
+  }
 }

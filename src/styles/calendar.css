@@ -87,7 +87,7 @@
 }
 
 .calendar-day {
-  --day-height: 60px;
+  --day-height: 52px;
   
   height: var(--day-height);
   display: flex;

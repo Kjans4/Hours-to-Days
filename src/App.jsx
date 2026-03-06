@@ -3,15 +3,25 @@ import Calculator from './components/Calculator'
 function App() {
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>Hours to Days</h1>
-        <p>Calculate when you'll finish your project</p>
+      {/* Compact Header */}
+      <header className="app-header compact">
+        <div className="header-content">
+          <div className="header-left">
+            <span className="header-icon">⏱️</span>
+            <h1 className="header-title">Hours to Days</h1>
+          </div>
+          <p className="header-tagline">Project timeline calculator</p>
+        </div>
       </header>
-      <main>
+
+      {/* Main Content */}
+      <main className="main-compact">
         <Calculator />
       </main>
-      <footer className="app-footer">
-        <p>© 2026 Hours to Days - Free Workday Calculator</p>
+
+      {/* Compact Footer */}
+      <footer className="app-footer compact">
+        <p>© 2026 Hours to Days</p>
       </footer>
     </div>
   )

@@ -1,29 +1,29 @@
 /* ============================================ */
-/* BUTTONS */
+/* BUTTONS - COMPACT VERSION */
 /* ============================================ */
 
 .calculate-button {
   width: 100%;
-  padding: 1.25rem;
+  padding: 0.875rem;
   background: var(--primary-gradient);
   color: white;
   border: none;
-  border-radius: var(--border-radius-md);
-  font-size: 1.15rem;
+  border-radius: 10px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
-  margin-top: 1.5rem;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .calculate-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .calculate-button:active {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
 .calculate-button:disabled {
