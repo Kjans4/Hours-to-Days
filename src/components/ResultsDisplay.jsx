@@ -44,7 +44,7 @@ function ResultsDisplay({ result }) {
 
       {/* Calculation Steps */}
       <div className="calculation-steps">
-        <h3>How we calculated:</h3>
+        <h3>How it is calculated:</h3>
         <ol>
           {result.steps.map((step, index) => (
             <li key={index}>{step}</li>
