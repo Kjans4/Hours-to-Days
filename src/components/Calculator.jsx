@@ -2,24 +2,44 @@ import { useState } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
-import { useLocalStorage } from '../hooks/useLocalStorage'  // NEW IMPORT
+import { useLocalStorage } from '../hooks/useLocalStorage'
 
+/**
+ * Calculator Component
+ * Manages the state and logic for calculating a project finish date based on 
+ * total effort, daily capacity, and specific working/excluded days.
+ */
 function Calculator() {
+  // Sets default start date to today in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0]
+  
+  // Helper to get available units (e.g., hours, days, weeks) for the dropdowns
   const timeUnits = getTimeUnits()
   
-  // REPLACE useState WITH useLocalStorage FOR PERSISTENT DATA
-  const [totalValue, setTotalValue] = useLocalStorage('totalValue', 500)
+  /**
+   * PERSISTENT STATE
+   * These values use useLocalStorage so the user doesn't lose their data 
+   * when they refresh the page.
+   */
+  const [totalValue, setTotalValue] = useLocalStorage('totalValue', 500) // Total work amount
   const [totalUnit, setTotalUnit] = useLocalStorage('totalUnit', 'hour')
-  const [dailyValue, setDailyValue] = useLocalStorage('dailyValue', 8)
+  const [dailyValue, setDailyValue] = useLocalStorage('dailyValue', 8)   // Capacity per day
   const [dailyUnit, setDailyUnit] = useLocalStorage('dailyUnit', 'hour')
   const [startDate, setStartDate] = useLocalStorage('startDate', today)
+  
+  // Array of numbers representing days of the week (0=Sun, 1=Mon, etc.)
   const [workingDays, setWorkingDays] = useLocalStorage('workingDays', [1, 2, 3, 4, 5])
+  
+  // Array of ISO date strings to be skipped during calculation
   const [excludedDates, setExcludedDates] = useLocalStorage('excludedDates', [])
   
-  // KEEP useState FOR NON-PERSISTENT DATA
+  /**
+   * EPHEMERAL STATE
+   * The calculation result is not persisted; it recalculates on user action.
+   */
   const [result, setResult] = useState(null)
 
+  // Configuration for the working days checkbox list
   const weekdays = [
     { value: 0, label: 'Sun' },
     { value: 1, label: 'Mon' },
@@ -30,6 +50,10 @@ function Calculator() {
     { value: 6, label: 'Sat' },
   ]
 
+  /**
+   * Toggles a weekday in or out of the workingDays array.
+   * Ensures the array stays sorted for consistent logic.
+   */
   const toggleDay = (dayValue) => {
     setWorkingDays(prev =>
       prev.includes(dayValue)
@@ -38,6 +62,9 @@ function Calculator() {
     )
   }
 
+  /**
+   * Adds or removes a specific date from the exclusion list (holidays/vacations).
+   */
   const toggleExcludedDate = (dateString) => {
     setExcludedDates(prev =>
       prev.includes(dateString)
@@ -46,6 +73,10 @@ function Calculator() {
     )
   }
 
+  /**
+   * Triggers the calculation utility function with current state values.
+   * Converts string inputs to floats to ensure mathematical accuracy.
+   */
   const handleCalculate = () => {
     const result = calculateFinishDate(
       parseFloat(totalValue),
@@ -59,11 +90,12 @@ function Calculator() {
     setResult(result)
   }
 
+  // Basic validation: Prevent calculation if inputs are empty or no working days selected
   const isDisabled = !totalValue || !dailyValue || workingDays.length === 0
 
   return (
     <div className="calculator">
-      {/* Total Time Input */}
+      {/* SECTION: Total Effort Input */}
       <div className="input-group">
         <label htmlFor="total-time">Total time needed:</label>
         <div className="input-with-unit">
@@ -86,7 +118,7 @@ function Calculator() {
         </div>
       </div>
 
-      {/* Daily Time Input */}
+      {/* SECTION: Daily Capacity Input */}
       <div className="input-group">
         <label htmlFor="daily-time">Time per day:</label>
         <div className="input-with-unit">
@@ -109,7 +141,7 @@ function Calculator() {
         </div>
       </div>
 
-      {/* Start Date Input */}
+      {/* SECTION: Project Start Date */}
       <div className="input-group">
         <label htmlFor="start-date">Start date:</label>
         <input
@@ -120,7 +152,7 @@ function Calculator() {
         />
       </div>
 
-      {/* Working Days Selector */}
+      {/* SECTION: Weekday Selection */}
       <div className="input-group">
         <label>Working days:</label>
         <div className="weekday-selector">
@@ -137,14 +169,14 @@ function Calculator() {
         </div>
       </div>
 
-      {/* Exclude Date Component */}
+      {/* SECTION: Custom Date Exclusions (Holidays, etc.) */}
       <ExcludeDate 
         excludedDates={excludedDates}
         onToggleDate={toggleExcludedDate}
         onClearAll={() => setExcludedDates([])}
       />
 
-      {/* Calculate Button */}
+      {/* SECTION: Execution */}
       <button 
         className="calculate-button"
         onClick={handleCalculate}
@@ -153,7 +185,7 @@ function Calculator() {
         Calculate
       </button>
 
-      {/* Results */}
+      {/* SECTION: Display Result if calculation has been performed */}
       {result && <ResultsDisplay result={result} />}
     </div>
   )
