@@ -3,6 +3,7 @@ import Calendar from './Calendar'
 import NoteModal from './NoteModal'
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useFirebaseStorage } from '../hooks/useFirebaseStorage'
 
 function TimelineCalendar({ 
   startDateString,
@@ -16,7 +17,7 @@ function TimelineCalendar({
   const months = getMonthsBetween(startDateString, finishDateString)
 
   // Note state
-  const [dateNotes, setDateNotes] = useLocalStorage('dateData', {})
+  const [dateNotes, setDateNotes, notesLoading] = useFirebaseStorage('dateData', {})
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
 
