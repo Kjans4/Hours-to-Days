@@ -11,6 +11,7 @@ import {
 function Auth({ user, onClose }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -39,6 +40,13 @@ function Auth({ user, onClose }) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // Password confirmation check for sign up
+    if (isSignUp && password !== confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
 
     try {
       if (isSignUp) {
@@ -72,6 +80,13 @@ function Auth({ user, onClose }) {
     onClose()
   }
 
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp)
+    setError('')
+    setPassword('')
+    setConfirmPassword('')
+  }
+
   if (user) {
     return (
       <div className="auth-modal" onClick={onClose}>
@@ -94,7 +109,11 @@ function Auth({ user, onClose }) {
     <div className="auth-modal" onClick={onClose}>
       <div className="auth-content" onClick={(e) => e.stopPropagation()}>
         <h3>{isSignUp ? 'Create Account' : 'Sign In'}</h3>
-        <p className="auth-subtitle">Sign in to sync your data across devices</p>
+        <p className="auth-subtitle">
+          {isSignUp 
+            ? 'Create an account to sync your data' 
+            : 'Sign in to sync your data across devices'}
+        </p>
 
         {/* Google Sign-In Button */}
         <button 
@@ -123,6 +142,7 @@ function Auth({ user, onClose }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
           />
           <input
             type="password"
@@ -131,20 +151,47 @@ function Auth({ user, onClose }) {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete={isSignUp ? "new-password" : "current-password"}
           />
+          
+          {/* Confirm Password - Only for Sign Up */}
+          {isSignUp && (
+            <div className="password-confirm-wrapper">
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              {/* Real-time password match indicator */}
+              {confirmPassword && (
+                <div className="password-match-indicator">
+                  {password === confirmPassword ? (
+                    <span className="match-success">✓ Passwords match</span>
+                  ) : (
+                    <span className="match-error">✗ Passwords do not match</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit" disabled={loading} className="submit-btn">
+          <button 
+            type="submit" 
+            disabled={loading || (isSignUp && password !== confirmPassword && confirmPassword !== '')} 
+            className="submit-btn"
+          >
             {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </button>
         </form>
 
         <button 
-          onClick={() => {
-            setIsSignUp(!isSignUp)
-            setError('')
-          }} 
+          onClick={toggleMode} 
           className="toggle-mode-btn"
         >
           {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}

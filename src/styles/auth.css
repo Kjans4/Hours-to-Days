@@ -281,6 +281,38 @@
   color: #6b7280;
 }
 
+/* Password Confirmation */
+.password-confirm-wrapper {
+  position: relative;
+}
+
+.password-match-indicator {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.match-success {
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.match-error {
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: #9ca3af;
+}
+
 /* Mobile Responsive */
 @media (max-width: 480px) {
   .auth-content {
