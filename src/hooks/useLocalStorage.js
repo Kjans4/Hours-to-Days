@@ -1,30 +1,160 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
+import ResultsDisplay from './ResultsDisplay'
+import ExcludeDate from './ExcludeDate'
+import { useHybridStorage } from '../hooks/useHybridStorage' // Changed
 
-/**
- * Custom hook for localStorage with JSON support
- * @param {string} key - localStorage key
- * @param {any} defaultValue - Default value if nothing in storage
- */
-export function useLocalStorage(key, defaultValue) {
-  // Initialize state with value from localStorage or default
-  const [value, setValue] = useState(() => {
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : defaultValue
-    } catch (error) {
-      console.warn(`Error loading ${key} from localStorage:`, error)
-      return defaultValue
-    }
-  })
+function Calculator() {
+  const today = new Date().toISOString().split('T')[0]
+  const timeUnits = getTimeUnits()
+  
+  const [totalValue, setTotalValue] = useHybridStorage('totalValue', 500)
+  const [totalUnit, setTotalUnit] = useHybridStorage('totalUnit', 'hour')
+  const [dailyValue, setDailyValue] = useHybridStorage('dailyValue', 8)
+  const [dailyUnit, setDailyUnit] = useHybridStorage('dailyUnit', 'hour')
+  const [startDate, setStartDate] = useHybridStorage('startDate', today)
+  const [workingDays, setWorkingDays] = useHybridStorage('workingDays', [1, 2, 3, 4, 5])
+  const [excludedDates, setExcludedDates] = useHybridStorage('excludedDates', [])
+  
+  const [result, setResult] = useState(null)
 
-  // Update localStorage when value changes
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(value))
-    } catch (error) {
-      console.warn(`Error saving ${key} to localStorage:`, error)
-    }
-  }, [key, value])
+  const weekdays = [
+    { value: 0, label: 'Sun' },
+    { value: 1, label: 'Mon' },
+    { value: 2, label: 'Tue' },
+    { value: 3, label: 'Wed' },
+    { value: 4, label: 'Thu' },
+    { value: 5, label: 'Fri' },
+    { value: 6, label: 'Sat' },
+  ]
 
-  return [value, setValue]
+  const toggleDay = (dayValue) => {
+    setWorkingDays(prev =>
+      prev.includes(dayValue)
+        ? prev.filter(d => d !== dayValue)
+        : [...prev, dayValue].sort()
+    )
+  }
+
+  const toggleExcludedDate = (dateString) => {
+    setExcludedDates(prev =>
+      prev.includes(dateString)
+        ? prev.filter(d => d !== dateString)
+        : [...prev, dateString].sort()
+    )
+  }
+
+  const handleCalculate = () => {
+    const result = calculateFinishDate(
+      parseFloat(totalValue),
+      totalUnit,
+      parseFloat(dailyValue),
+      dailyUnit,
+      workingDays,
+      startDate,
+      excludedDates
+    )
+    setResult(result)
+  }
+
+  const isDisabled = !totalValue || !dailyValue || workingDays.length === 0
+
+  return (
+    <div className="calculator">
+      {/* Total Time Input */}
+      <div className="input-group">
+        <label htmlFor="total-time">Total time needed:</label>
+        <div className="input-with-unit">
+          <input
+            id="total-time"
+            type="number"
+            value={totalValue}
+            onChange={(e) => setTotalValue(e.target.value)}
+            min="0"
+            step="any"
+          />
+          <select 
+            value={totalUnit} 
+            onChange={(e) => setTotalUnit(e.target.value)}
+          >
+            {timeUnits.map(unit => (
+              <option key={unit.value} value={unit.value}>{unit.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Daily Time Input */}
+      <div className="input-group">
+        <label htmlFor="daily-time">Time per day:</label>
+        <div className="input-with-unit">
+          <input
+            id="daily-time"
+            type="number"
+            value={dailyValue}
+            onChange={(e) => setDailyValue(e.target.value)}
+            min="0"
+            step="any"
+          />
+          <select 
+            value={dailyUnit} 
+            onChange={(e) => setDailyUnit(e.target.value)}
+          >
+            {timeUnits.map(unit => (
+              <option key={unit.value} value={unit.value}>{unit.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Start Date Input */}
+      <div className="input-group">
+        <label htmlFor="start-date">Start date:</label>
+        <input
+          id="start-date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+      </div>
+
+      {/* Working Days Selector */}
+      <div className="input-group">
+        <label>Working days:</label>
+        <div className="weekday-selector">
+          {weekdays.map(day => (
+            <label key={day.value} className="weekday-checkbox">
+              <input
+                type="checkbox"
+                checked={workingDays.includes(day.value)}
+                onChange={() => toggleDay(day.value)}
+              />
+              <span>{day.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Exclude Date Component */}
+      <ExcludeDate 
+        excludedDates={excludedDates}
+        onToggleDate={toggleExcludedDate}
+        onClearAll={() => setExcludedDates([])}
+      />
+
+      {/* Calculate Button */}
+      <button 
+        className="calculate-button"
+        onClick={handleCalculate}
+        disabled={isDisabled}
+      >
+        Calculate
+      </button>
+
+      {/* Results */}
+      {result && <ResultsDisplay result={result} />}
+    </div>
+  )
 }
+
+export default Calculator

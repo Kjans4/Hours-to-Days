@@ -2,22 +2,20 @@ import { useState } from 'react'
 import Calendar from './Calendar'
 import NoteModal from './NoteModal'
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
-import { useLocalStorage } from '../hooks/useLocalStorage'
-import { useFirebaseStorage } from '../hooks/useFirebaseStorage'
+import { useHybridStorage } from '../hooks/useHybridStorage'
 
 function TimelineCalendar({ 
   startDateString,
   finishDateString,
   workingDaysArray
 }) {
-  // Always start expanded with first month visible
-  const [isExpanded, setIsExpanded] = useState(true)  // Changed from false
-  const [showAllMonths, setShowAllMonths] = useState(false)  // NEW
+  const [isExpanded, setIsExpanded] = useState(true)  
+  const [showAllMonths, setShowAllMonths] = useState(false) 
   
   const months = getMonthsBetween(startDateString, finishDateString)
 
   // Note state
-  const [dateNotes, setDateNotes, notesLoading] = useFirebaseStorage('dateData', {})
+  const [dateNotes, setDateNotes] = useHybridStorage('dateData', {})
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
 

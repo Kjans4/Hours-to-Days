@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
-import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useHybridStorage } from '../hooks/useHybridStorage'
 import { useFirebaseStorage } from '../hooks/useFirebaseStorage'
 
 /**
@@ -22,7 +22,7 @@ function Calculator() {
    * These values use useLocalStorage so the user doesn't lose their data 
    * when they refresh the page.
    */
-  const [totalValue, setTotalValue] = useFirebaseStorage('totalValue', 500)
+  const [totalValue, setTotalValue] = useHybridStorage('totalValue', 500)
 const [totalUnit, setTotalUnit] = useFirebaseStorage('totalUnit', 'hour')
 const [dailyValue, setDailyValue] = useFirebaseStorage('dailyValue', 8)
 const [dailyUnit, setDailyUnit] = useFirebaseStorage('dailyUnit', 'hour')
@@ -30,7 +30,6 @@ const [startDate, setStartDate] = useFirebaseStorage('startDate', today)
 const [workingDays, setWorkingDays] = useFirebaseStorage('workingDays', [1, 2, 3, 4, 5])
 const [excludedDates, setExcludedDates] = useFirebaseStorage('excludedDates', [])
 
-  
   /**
    * EPHEMERAL STATE
    * The calculation result is not persisted; it recalculates on user action.
