@@ -41,7 +41,6 @@ function Auth({ user, onClose }) {
     setLoading(true)
     setError('')
 
-    // Password confirmation check for sign up
     if (isSignUp && password !== confirmPassword) {
       setError('Passwords do not match')
       setLoading(false)
@@ -115,7 +114,6 @@ function Auth({ user, onClose }) {
             : 'Sign in to sync your data across devices'}
         </p>
 
-        {/* Google Sign-In Button */}
         <button 
           onClick={handleGoogleSignIn} 
           disabled={loading}
@@ -134,7 +132,6 @@ function Auth({ user, onClose }) {
           <span>or</span>
         </div>
 
-        {/* Email/Password Form */}
         <form onSubmit={handleEmailSubmit}>
           <input
             type="email"
@@ -154,9 +151,9 @@ function Auth({ user, onClose }) {
             autoComplete={isSignUp ? "new-password" : "current-password"}
           />
           
-          {/* Confirm Password - Only for Sign Up */}
+          {/* UPDATED SECTION: Fragments used instead of div wrapper */}
           {isSignUp && (
-            <div className="password-confirm-wrapper">
+            <>
               <input
                 type="password"
                 placeholder="Confirm password"
@@ -166,7 +163,6 @@ function Auth({ user, onClose }) {
                 minLength={6}
                 autoComplete="new-password"
               />
-              {/* Real-time password match indicator */}
               {confirmPassword && (
                 <div className="password-match-indicator">
                   {password === confirmPassword ? (
@@ -176,7 +172,7 @@ function Auth({ user, onClose }) {
                   )}
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {error && <p className="error-message">{error}</p>}
