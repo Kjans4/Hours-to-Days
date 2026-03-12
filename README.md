@@ -6,9 +6,10 @@ A modern web app that calculates project completion dates based on total hours, 
 
 - **Flexible Time Units** - Convert between 10 different units (milliseconds to centuries)
 - **Custom Work Schedules** - Select specific working days (Mon-Sun)
-- **Holiday Exclusion** - Exclude specific dates from calculations
-- **Visual Timeline** - Interactive calendar showing project timeline
-- **Date Notes** - Add notes to specific dates to track progress
-- **Data Persistence** - All inputs saved locally in your browser
+- **Holiday Exclusion** - Exclude specific dates from calculations via interactive calendar
+- **Visual Timeline** - Multi-month calendar view showing your entire project timeline
+- **Date Notes & Tasks** - Add notes and to-do lists to specific dates to track progress
+- **Cloud Sync** - Sign in with Google or email to sync data across all your devices
+- **Offline Support** - Works without login, data saved locally in your browser
 - **Mobile Responsive** - Works seamlessly on desktop, tablet, and mobile
-- **To Do List** - You can add task alongside with Notes
+- **Compact Design** - Optimized layout fits everything on one screen
