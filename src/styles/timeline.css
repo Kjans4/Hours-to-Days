@@ -37,6 +37,78 @@
   font-weight: 700;
 }
 
+/* Export Buttons */
+.export-buttons {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-bottom: 1px solid #f3f4f6;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 2px solid;
+}
+
+.export-png {
+  background: white;
+  color: #2563eb;
+  border-color: #2563eb;
+}
+
+.export-png:hover:not(:disabled) {
+  background: #eff6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.export-pdf {
+  background: white;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.export-pdf:hover:not(:disabled) {
+  background: #fef2f2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.export-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .export-buttons {
+    padding: 0.875rem 1rem;
+  }
+
+  .export-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.625rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
 .timeline-title {
   font-size: 1.1rem;
   font-weight: 700;

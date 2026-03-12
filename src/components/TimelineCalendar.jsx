@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Calendar from './Calendar'
 import NoteModal from './NoteModal'
+import ExportButtons from './ExportButtons' // NEW IMPORT
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
 import { useHybridStorage } from '../hooks/useHybridStorage'
 
@@ -9,27 +10,34 @@ function TimelineCalendar({
   finishDateString,
   workingDaysArray
 }) {
-  const [isExpanded, setIsExpanded] = useState(true)  
-  const [showAllMonths, setShowAllMonths] = useState(false) 
+  const [isExpanded, setIsExpanded] = useState(true)
+  const [showAllMonths, setShowAllMonths] = useState(false)
   
   const months = getMonthsBetween(startDateString, finishDateString)
 
-  // Note state
   const [dateNotes, setDateNotes] = useHybridStorage('dateData', {})
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
 
-  // Count excluded and notes
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.keys(dateNotes).length
 
-  // Handle date click
+  // Auto-collapse timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isExpanded && !noteModalOpen) {
+        setIsExpanded(false)
+      }
+    }, 10000)
+    
+    return () => clearTimeout(timer)
+  }, [isExpanded, noteModalOpen])
+
   const handleDateClick = (dateString) => {
     setSelectedDate(dateString)
     setNoteModalOpen(true)
   }
 
-  // Save note/tasks
   const handleSaveNote = (data) => {
     if (data === null) {
       setDateNotes(prev => {
@@ -45,13 +53,11 @@ function TimelineCalendar({
     }
   }
 
-  // Close modal
   const handleCloseModal = () => {
     setNoteModalOpen(false)
     setSelectedDate(null)
   }
 
-  // Get months to display
   const firstMonth = months[0]
   const remainingMonths = months.slice(1)
   const monthsToShow = showAllMonths ? months : [firstMonth]
@@ -74,6 +80,9 @@ function TimelineCalendar({
 
       {isExpanded && (
         <>
+          {/* NEW: Export Buttons */}
+          <ExportButtons />
+
           {/* Legend */}
           <div className="timeline-legend">
             <span className="legend-item">
@@ -102,7 +111,6 @@ function TimelineCalendar({
             {monthsToShow.map(({ year, month }) => {
               const datesForMonth = filterDatesForMonth(workingDaysArray, year, month)
               
-              // Add note indicator to dates
               const datesWithNotes = datesForMonth.map(item => {
                 const hasNote = dateNotes[item.date]
                 return {
@@ -124,7 +132,7 @@ function TimelineCalendar({
             })}
           </div>
 
-          {/* Show More/Less Button - Only if more than 1 month */}
+          {/* Show More/Less Button */}
           {remainingMonths.length > 0 && (
             <div className="timeline-expand-section">
               <button
