@@ -13,3 +13,12 @@ A modern web app that calculates project completion dates based on total hours, 
 - **Offline Support** - Works without login, data saved locally in your browser
 - **Mobile Responsive** - Works seamlessly on desktop, tablet, and mobile
 - **Compact Design** - Optimized layout fits everything on one screen
+
+# Install export timeline dependencies
+npm install html2canvas jspdf
+
+# Install Firebase (if not already)
+npm install firebase
+
+# Restart dev server
+npm run dev
