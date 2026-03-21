@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Calendar from './Calendar'
 import NoteModal from './NoteModal'
-import ExportButtons from './ExportButtons' // NEW IMPORT
+import ExportButtons from './ExportButtons'
 import { getMonthsBetween, filterDatesForMonth } from '../utils/dateHelpers'
 import { useHybridStorage } from '../hooks/useHybridStorage'
 
@@ -22,16 +22,8 @@ function TimelineCalendar({
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.keys(dateNotes).length
 
-  // Auto-collapse timer
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isExpanded && !noteModalOpen) {
-        setIsExpanded(false)
-      }
-    }, 10000)
-    
-    return () => clearTimeout(timer)
-  }, [isExpanded, noteModalOpen])
+  /* FIX 2: AUTO-CLOSE DISABLED - User now has full control over the timeline visibility */
+  /* The useEffect that previously used setTimeout to setIsExpanded(false) has been removed. */
 
   const handleDateClick = (dateString) => {
     setSelectedDate(dateString)
@@ -80,8 +72,10 @@ function TimelineCalendar({
 
       {isExpanded && (
         <>
-          {/* NEW: Export Buttons */}
-          <ExportButtons />
+          <ExportButtons 
+            workingDays={workingDaysArray} 
+            dateNotes={dateNotes} 
+          />
 
           {/* Legend */}
           <div className="timeline-legend">
@@ -156,7 +150,6 @@ function TimelineCalendar({
         </>
       )}
 
-      {/* Note Modal */}
       <NoteModal
         isOpen={noteModalOpen}
         onClose={handleCloseModal}
