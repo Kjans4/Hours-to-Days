@@ -108,28 +108,11 @@
   pointer-events: none;
 }
 
-.calendar-day::before {
-  content: "";
-  position: absolute;
-  background-color: transparent;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  border-radius: var(--accent-br);
-  transition: background-color 0.2s ease;
-  z-index: 1;
-}
-
 /* Empty days */
 .calendar-day.empty {
   cursor: default;
   color: transparent;
   pointer-events: none;
-}
-
-.calendar-day.empty::before {
-  display: none;
 }
 
 /* Hover effect */
@@ -141,9 +124,16 @@
 .calendar-day.start {
   color: #ffffff;
   font-weight: 700;
+  position: relative;
 }
 
 .calendar-day.start::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #10b981;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
   border-top-left-radius: var(--accent-br);
@@ -151,16 +141,16 @@
   z-index: 2;
 }
 
-.calendar-day.start::after {
+.calendar-day.start span::after {
   content: "";
   position: absolute;
-  bottom: 8px;
-  border-radius: 24px;
+  bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9);
   width: 8px;
   height: 3px;
+  border-radius: 24px;
   z-index: 11;
 }
 
@@ -171,6 +161,12 @@
 }
 
 .calendar-day.workday::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #dbeafe;
   border-radius: 0;
   z-index: 2;
@@ -183,6 +179,12 @@
 }
 
 .calendar-day.finish::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #f59e0b;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
   border-top-right-radius: var(--accent-br);
@@ -198,45 +200,82 @@
 }
 
 .calendar-day.excluded::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #fee2e2;
-  border: 2px dashed #ef4444;
+  border: 1px dashed #ef4444;
   z-index: 2;
+  border-radius: var(--accent-br);
 }
 
-.calendar-day.excluded::after {
+.calendar-day.excluded span::after {
   content: "";
   position: absolute;
   top: 50%;
-  left: 10%;
-  right: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
   height: 2px;
   background-color: #dc2626;
   z-index: 11;
-  transform: translateY(-50%);
 }
 
 .calendar-day.excluded span {
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
+  text-decoration: none;
 }
 
-/* Today indicator */
-.calendar-day.today::after {
-  content: "";
+/* ============================================ */
+/* TODAY INDICATOR (RED DOT) */
+/* ============================================ */
+
+.calendar-day.today::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  width: 7px !important;
+  height: 7px !important;
+  background-color: #ef4444 !important;
+  border-radius: 50% !important;
+  z-index: 20 !important;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.5) !important;
+  pointer-events: none;
+}
+
+.calendar-day.start.today::before,
+.calendar-day.finish.today::before {
+  background-color: #fff !important;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ============================================ */
+/* NOTE INDICATOR (💬 ICON) */
+/* ============================================ */
+
+.calendar-day.has-note::after {
+  content: "💬";
   position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 14px;
+  z-index: 15;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+}
+
+/* Priority Fix: Combining Today + Note */
+.calendar-day.today.has-note::before {
   top: 6px;
   right: 6px;
-  width: 7px;
-  height: 7px;
-  background-color: #ef4444;
-  border-radius: 50%;
-  z-index: 11;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.5);
 }
 
-.calendar-day.start.today::after,
-.calendar-day.finish.today::after {
-  background-color: #fff;
+.calendar-day.today.has-note::after {
+  bottom: 4px;
+  right: 4px;
 }
 
 /* Range edges */
@@ -252,47 +291,4 @@
 
 .calendar-day.start.finish::before {
   border-radius: var(--accent-br);
-}
-
-/* ============================================ */
-/* NOTE INDICATOR STYLES */
-/* ============================================ */
-
-/* Basic Note Styling */
-.calendar-day.has-note::after {
-  content: "💬";
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  font-size: 14px;
-  z-index: 12;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-  /* Resetting potential overlaps */
-  top: auto;
-  left: auto;
-  transform: none;
-  width: auto;
-  height: auto;
-  background: none;
-  box-shadow: none;
-}
-
-/* Priority Fix: Replace dots/lines with Note Icon if both exist */
-.calendar-day.start.has-note::after,
-.calendar-day.finish.has-note::after,
-.calendar-day.excluded.has-note::after {
-  content: "💬";
-  bottom: 4px;
-  right: 4px;
-  width: auto;
-  height: auto;
-  background: none;
-  font-size: 14px;
-  transform: none;
-  top: auto;
-}
-
-/* Today indicator with note - ensures Today dot stays top-right */
-.calendar-day.today.has-note::after {
-  content: "💬";
 }
