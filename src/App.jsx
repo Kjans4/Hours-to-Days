@@ -35,7 +35,6 @@ function App() {
         </div>
       </header>
 
-      {/* NEW: Navigation Component */}
       <Navigation />
 
       <main className="main-compact">
