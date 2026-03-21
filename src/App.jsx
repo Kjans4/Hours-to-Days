@@ -8,7 +8,12 @@ function App() {
   const [showAuth, setShowAuth] = useState(false)
 
   if (loading) {
-    return <div className="loading">Loading...</div>
+    return (
+      <div className="loading">
+        <img src="/clock.svg" alt="Loading" className="loading-logo" />
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   return (
@@ -16,11 +21,12 @@ function App() {
       <header className="app-header compact">
         <div className="header-content">
           <div className="header-left">
-            <span className="header-icon">⏱️</span>
+            {/* SVG Logo */}
+            <img src="/clock.svg" alt="Hours to Days Logo" className="header-logo" />
             <h1 className="header-title">Hours to Days</h1>
           </div>
           
-          {/* ADD THIS LOGIN BUTTON */}
+          {/* Login Button */}
           <button 
             className="login-btn"
             onClick={() => setShowAuth(true)}
@@ -35,7 +41,7 @@ function App() {
       </main>
 
       <footer className="app-footer compact">
-        <p>© 2026 Hours to Days</p>
+        <p>© 2026 Hours to Days Calculator</p>
       </footer>
 
       {/* Auth Modal */}

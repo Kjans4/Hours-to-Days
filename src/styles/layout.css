@@ -26,12 +26,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Header Logo (SVG) */
+.header-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  flex-shrink: 0;
 }
 
 .header-icon {
@@ -76,54 +86,7 @@
   margin: 0;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .app-header.compact {
-    padding: 0.75rem 1rem;
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-
-  .header-title {
-    font-size: 1.25rem;
-  }
-
-  .header-tagline {
-    font-size: 0.8rem;
-  }
-
-  .main-compact {
-    padding: 1rem;
-  }
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-/* Header Logo */
-.header-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-/* Loading Screen Logo */
+/* Loading Screen */
 .loading {
   display: flex;
   flex-direction: column;
@@ -131,11 +94,13 @@
   justify-content: center;
   height: 100vh;
   gap: 1rem;
+  background: #f5f7fa;
 }
 
 .loading-logo {
   width: 64px;
   height: 64px;
+  object-fit: contain;
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -156,15 +121,47 @@
   font-weight: 600;
 }
 
-/* Mobile adjustments */
-@media (max-width: 480px) {
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header.compact {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-content {
+    flex-direction: row; /* Keep horizontal on mobile */
+    align-items: center;
+  }
+
   .header-logo {
     width: 28px;
     height: 28px;
   }
-  
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .header-tagline {
+    font-size: 0.8rem;
+  }
+
+  .main-compact {
+    padding: 1rem;
+  }
+
   .loading-logo {
     width: 48px;
     height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
   }
 }
