@@ -3,7 +3,6 @@ import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
 import { useHybridStorage } from '../hooks/useHybridStorage'
-import { useFirebaseStorage } from '../hooks/useFirebaseStorage'
 
 /**
  * Calculator Component
@@ -18,17 +17,16 @@ function Calculator() {
   const timeUnits = getTimeUnits()
   
   /**
-   * PERSISTENT STATE
-   * These values use useLocalStorage so the user doesn't lose their data 
-   * when they refresh the page.
+   * PERSISTENT STATE - ALL USING useHybridStorage
+   * These values save to BOTH localStorage (offline) and Firebase (cloud sync)
    */
   const [totalValue, setTotalValue] = useHybridStorage('totalValue', 500)
-const [totalUnit, setTotalUnit] = useFirebaseStorage('totalUnit', 'hour')
-const [dailyValue, setDailyValue] = useFirebaseStorage('dailyValue', 8)
-const [dailyUnit, setDailyUnit] = useFirebaseStorage('dailyUnit', 'hour')
-const [startDate, setStartDate] = useFirebaseStorage('startDate', today)
-const [workingDays, setWorkingDays] = useFirebaseStorage('workingDays', [1, 2, 3, 4, 5])
-const [excludedDates, setExcludedDates] = useFirebaseStorage('excludedDates', [])
+  const [totalUnit, setTotalUnit] = useHybridStorage('totalUnit', 'hour')
+  const [dailyValue, setDailyValue] = useHybridStorage('dailyValue', 8)
+  const [dailyUnit, setDailyUnit] = useHybridStorage('dailyUnit', 'hour')
+  const [startDate, setStartDate] = useHybridStorage('startDate', today)
+  const [workingDays, setWorkingDays] = useHybridStorage('workingDays', [1, 2, 3, 4, 5])
+  const [excludedDates, setExcludedDates] = useHybridStorage('excludedDates', [])
 
   /**
    * EPHEMERAL STATE

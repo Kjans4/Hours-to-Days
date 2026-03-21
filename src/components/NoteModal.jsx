@@ -23,7 +23,6 @@ function NoteModal({
     if (isOpen && existingData) {
       setNoteText(existingData.note || '')
       setTasks(existingData.tasks || [])
-      // Auto-expand sections with data
       setNoteExpanded(!!existingData.note)
       setTasksExpanded((existingData.tasks || []).length > 0)
     } else if (isOpen) {
@@ -34,7 +33,6 @@ function NoteModal({
     }
   }, [isOpen, existingData])
 
-  // Format date for display
   const formatDate = (dateStr) => {
     const date = new Date(dateStr + 'T00:00:00')
     return date.toLocaleDateString('en-US', {
@@ -45,7 +43,6 @@ function NoteModal({
     })
   }
 
-  // Task CRUD operations
   const handleAddTask = () => {
     if (newTaskText.trim()) {
       const newTask = {
@@ -78,14 +75,11 @@ function NoteModal({
       timestamp: new Date().toISOString()
     }
     
-    // Only save if there's actual data
     if (dataToSave.note || dataToSave.tasks) {
       onSave(dataToSave)
     } else {
-      // If both empty, delete the date data
       onSave(null)
     }
-    
     handleClose()
   }
 
@@ -100,9 +94,7 @@ function NoteModal({
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      handleClose()
-    }
+    if (e.key === 'Escape') handleClose()
   }
 
   const handleTaskInputKeyDown = (e) => {
@@ -118,12 +110,13 @@ function NoteModal({
   if (!isOpen) return null
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="note-modal-backdrop" onClick={handleClose}></div>
-
-      {/* Modal */}
-      <div className="note-modal compact" onKeyDown={handleKeyDown}>
+    /* Fix: Wrap modal inside backdrop to enable Flexbox centering */
+    <div className="note-modal-backdrop" onClick={handleClose}>
+      <div 
+        className="note-modal compact" 
+        onClick={(e) => e.stopPropagation()} 
+        onKeyDown={handleKeyDown}
+      >
         {/* Header */}
         <div className="note-modal-header">
           <h3>{formatDate(dateString)}</h3>
@@ -138,7 +131,6 @@ function NoteModal({
 
         {/* Body */}
         <div className="note-modal-body">
-          
           {/* Note Section */}
           <div className="modal-section">
             <button
@@ -181,7 +173,6 @@ function NoteModal({
 
             {tasksExpanded && (
               <div className="section-content">
-                {/* Task List */}
                 {tasks.length > 0 && (
                   <div className="task-list">
                     {tasks.map(task => (
@@ -195,7 +186,6 @@ function NoteModal({
                   </div>
                 )}
 
-                {/* Add Task Input */}
                 {showTaskInput ? (
                   <div className="task-input-wrapper">
                     <input
@@ -226,7 +216,6 @@ function NoteModal({
               </div>
             )}
           </div>
-
         </div>
 
         {/* Footer */}
@@ -239,7 +228,7 @@ function NoteModal({
           </button>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
