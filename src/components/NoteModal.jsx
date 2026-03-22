@@ -30,6 +30,7 @@ function NoteModal({
       setTasks([])
       setNoteExpanded(false)
       setTasksExpanded(false)
+      setShowTaskInput(false)
     }
   }, [isOpen, existingData])
 
@@ -110,10 +111,9 @@ function NoteModal({
   if (!isOpen) return null
 
   return (
-    /* Fix: Wrap modal inside backdrop to enable Flexbox centering */
-    <div className="note-modal-backdrop" onClick={handleClose}>
+    <div className="note-modal" onClick={handleClose}>
       <div 
-        className="note-modal compact" 
+        className="note-modal-content"
         onClick={(e) => e.stopPropagation()} 
         onKeyDown={handleKeyDown}
       >
@@ -137,21 +137,19 @@ function NoteModal({
               className="section-toggle"
               onClick={() => setNoteExpanded(!noteExpanded)}
             >
-              <span className="toggle-icon">{noteExpanded ? '▼' : '▶'}</span>
-              <span className="section-title">Note</span>
+              <span>{noteExpanded ? '▼' : '▶'} Note</span>
             </button>
 
             {noteExpanded && (
               <div className="section-content">
                 <textarea
-                  className="note-modal-textarea compact"
+                  className="note-modal-textarea"
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value.slice(0, maxChars))}
                   placeholder="Add a note..."
                   maxLength={maxChars}
-                  rows={3}
                 />
-                <div className="note-modal-char-count">
+                <div className="char-counter">
                   {noteText.length}/{maxChars}
                 </div>
               </div>
@@ -164,17 +162,16 @@ function NoteModal({
               className="section-toggle"
               onClick={() => setTasksExpanded(!tasksExpanded)}
             >
-              <span className="toggle-icon">{tasksExpanded ? '▼' : '▶'}</span>
-              <span className="section-title">Tasks</span>
-              {tasks.length > 0 && (
-                <span className="task-count">({tasks.length})</span>
-              )}
+              <span>
+                {tasksExpanded ? '▼' : '▶'} Tasks
+                {tasks.length > 0 && ` (${tasks.length})`}
+              </span>
             </button>
 
             {tasksExpanded && (
               <div className="section-content">
                 {tasks.length > 0 && (
-                  <div className="task-list">
+                  <div className="tasks-list">
                     {tasks.map(task => (
                       <TaskItem
                         key={task.id}
@@ -198,7 +195,7 @@ function NoteModal({
                       autoFocus
                     />
                     <button
-                      className="task-input-save"
+                      className="add-task-btn"
                       onClick={handleAddTask}
                       disabled={!newTaskText.trim()}
                     >
@@ -219,7 +216,7 @@ function NoteModal({
         </div>
 
         {/* Footer */}
-        <div className="note-modal-footer compact">
+        <div className="note-modal-footer">
           <button 
             className="note-modal-save"
             onClick={handleSave}
