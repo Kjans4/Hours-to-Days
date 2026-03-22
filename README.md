@@ -17,7 +17,7 @@ A modern web app that calculates project completion dates based on total hours, 
 # Install export timeline dependencies
 npm install html2canvas jspdf
 
-# Install Firebase (if not already)
+# Install Firebase
 npm install firebase
 
 # Restart dev server
