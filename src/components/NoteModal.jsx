@@ -5,18 +5,22 @@ function NoteModal({
   isOpen, 
   onClose, 
   dateString, 
-  existingData, 
+  existingData,
+  hoursPerDay = 8,
   onSave 
 }) {
   const maxChars = 200
 
-  // State
   const [noteText, setNoteText] = useState('')
   const [tasks, setTasks] = useState([])
   const [noteExpanded, setNoteExpanded] = useState(false)
   const [tasksExpanded, setTasksExpanded] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [showTaskInput, setShowTaskInput] = useState(false)
+
+  // ─── Completion state ──────────────────────────────────────────────────
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [completedHours, setCompletedHours] = useState('')
 
   // Load existing data when modal opens
   useEffect(() => {
@@ -25,16 +29,21 @@ function NoteModal({
       setTasks(existingData.tasks || [])
       setNoteExpanded(!!existingData.note)
       setTasksExpanded((existingData.tasks || []).length > 0)
+      setIsCompleted(!!existingData.completed)
+      setCompletedHours(existingData.hours != null ? String(existingData.hours) : String(hoursPerDay))
     } else if (isOpen) {
       setNoteText('')
       setTasks([])
       setNoteExpanded(false)
       setTasksExpanded(false)
       setShowTaskInput(false)
+      setIsCompleted(false)
+      setCompletedHours(String(hoursPerDay))
     }
-  }, [isOpen, existingData])
+  }, [isOpen, existingData, hoursPerDay])
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return ''
     const date = new Date(dateStr + 'T00:00:00')
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -42,6 +51,14 @@ function NoteModal({
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const handleToggleComplete = () => {
+    const next = !isCompleted
+    setIsCompleted(next)
+    if (next && !completedHours) {
+      setCompletedHours(String(hoursPerDay))
+    }
   }
 
   const handleAddTask = () => {
@@ -59,9 +76,7 @@ function NoteModal({
 
   const handleToggleTask = (taskId) => {
     setTasks(prev =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+      prev.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)
     )
   }
 
@@ -70,17 +85,19 @@ function NoteModal({
   }
 
   const handleSave = () => {
+    const parsedHours = parseFloat(completedHours)
+
     const dataToSave = {
       note: noteText.trim() || null,
       tasks: tasks.length > 0 ? tasks : null,
+      completed: isCompleted || null,
+      hours: isCompleted && !isNaN(parsedHours) ? parsedHours : null,
       timestamp: new Date().toISOString()
     }
-    
-    if (dataToSave.note || dataToSave.tasks) {
-      onSave(dataToSave)
-    } else {
-      onSave(null)
-    }
+
+    // If everything is empty, signal deletion
+    const hasContent = dataToSave.note || dataToSave.tasks || dataToSave.completed
+    onSave(hasContent ? dataToSave : null)
     handleClose()
   }
 
@@ -91,6 +108,8 @@ function NoteModal({
     setShowTaskInput(false)
     setNoteExpanded(false)
     setTasksExpanded(false)
+    setIsCompleted(false)
+    setCompletedHours('')
     onClose()
   }
 
@@ -99,13 +118,8 @@ function NoteModal({
   }
 
   const handleTaskInputKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleAddTask()
-    } else if (e.key === 'Escape') {
-      setNewTaskText('')
-      setShowTaskInput(false)
-    }
+    if (e.key === 'Enter') { e.preventDefault(); handleAddTask() }
+    if (e.key === 'Escape') { setNewTaskText(''); setShowTaskInput(false) }
   }
 
   if (!isOpen) return null
@@ -131,6 +145,49 @@ function NoteModal({
 
         {/* Body */}
         <div className="note-modal-body">
+
+          {/* ── MARK AS DONE TOGGLE (prominent, at top) ── */}
+          <div className={`done-toggle-section ${isCompleted ? 'done-toggle-section--active' : ''}`}>
+            <div className="done-toggle-left">
+              <span className="done-toggle-icon">{isCompleted ? '✅' : '⬜'}</span>
+              <div className="done-toggle-text">
+                <span className="done-toggle-label">
+                  {isCompleted ? 'Marked as Done' : 'Mark as Done'}
+                </span>
+                {isCompleted && (
+                  <span className="done-toggle-sub">Hold calendar day to quick-toggle</span>
+                )}
+              </div>
+            </div>
+
+            <div className="done-toggle-right">
+              {/* Hours input — only visible when completed */}
+              {isCompleted && (
+                <div className="done-hours-input-wrap">
+                  <input
+                    type="number"
+                    className="done-hours-input"
+                    value={completedHours}
+                    onChange={(e) => setCompletedHours(e.target.value)}
+                    min="0.5"
+                    max="24"
+                    step="0.5"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span className="done-hours-unit">hrs</span>
+                </div>
+              )}
+
+              {/* Toggle button */}
+              <button
+                className={`done-toggle-btn ${isCompleted ? 'done-toggle-btn--active' : ''}`}
+                onClick={handleToggleComplete}
+              >
+                {isCompleted ? 'Unmark' : 'Mark Done'}
+              </button>
+            </div>
+          </div>
+
           {/* Note Section */}
           <div className="modal-section">
             <button
@@ -149,7 +206,7 @@ function NoteModal({
                   placeholder="Add a note..."
                   maxLength={maxChars}
                 />
-                <div className="char-counter">
+                <div className={`char-counter ${noteText.length > maxChars * 0.9 ? 'warning' : ''}`}>
                   {noteText.length}/{maxChars}
                 </div>
               </div>
@@ -217,10 +274,7 @@ function NoteModal({
 
         {/* Footer */}
         <div className="note-modal-footer">
-          <button 
-            className="note-modal-save"
-            onClick={handleSave}
-          >
+          <button className="note-modal-save" onClick={handleSave}>
             Save
           </button>
         </div>

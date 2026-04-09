@@ -1,0 +1,153 @@
+/* ============================================ */
+/* MARK AS DONE TOGGLE — inside NoteModal       */
+/* ============================================ */
+
+.done-toggle-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  transition: all 0.2s ease;
+  flex-wrap: wrap;
+}
+
+.done-toggle-section--active {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-color: #10b981;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.12);
+}
+
+/* Left side: icon + text */
+.done-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.done-toggle-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.done-toggle-section--active .done-toggle-icon {
+  transform: scale(1.1);
+}
+
+.done-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.done-toggle-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.done-toggle-section--active .done-toggle-label {
+  color: #065f46;
+}
+
+.done-toggle-sub {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Right side: hours input + button */
+.done-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+/* Hours input */
+.done-hours-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: white;
+  border: 1.5px solid #10b981;
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+}
+
+.done-hours-input {
+  width: 48px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #065f46;
+  text-align: center;
+  background: transparent;
+  -moz-appearance: textfield;
+}
+
+.done-hours-input::-webkit-outer-spin-button,
+.done-hours-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.done-hours-unit {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Toggle button */
+.done-toggle-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid #10b981;
+  background: white;
+  color: #059669;
+  white-space: nowrap;
+}
+
+.done-toggle-btn:hover {
+  background: #ecfdf5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.done-toggle-btn--active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.done-toggle-btn--active:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .done-toggle-section {
+    padding: 0.875rem 1rem;
+  }
+
+  .done-toggle-label {
+    font-size: 0.9rem;
+  }
+
+  .done-toggle-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
