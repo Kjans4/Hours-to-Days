@@ -229,6 +229,111 @@
 }
 
 /* ============================================ */
+/* COMPLETED DAY - GREEN GRADIENT + CHECKMARK  */
+/* ============================================ */
+
+.calendar-day.completed {
+  color: #065f46;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Green gradient overlay - overrides workday/start/finish colors */
+.calendar-day.completed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #10b981 0%, #d1fae5 60%, #ffffff 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  border-radius: var(--accent-br);
+  z-index: 3;
+}
+
+/* Strikethrough on the day number */
+.calendar-day.completed span {
+  text-decoration: line-through;
+  text-decoration-color: #065f46;
+  text-decoration-thickness: 2px;
+  color: #065f46;
+  z-index: 10;
+}
+
+/* ✓ checkmark icon in top-left */
+.calendar-day.completed::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffffff;
+  background: #059669;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  line-height: 14px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.4);
+  pointer-events: none;
+}
+
+/* Pop-in animation when a day is marked complete */
+.calendar-day.completed {
+  animation: completePop 0.25s ease-out;
+}
+
+@keyframes completePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Inline hours edit input that appears on second click */
+.calendar-day .day-hours-input {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 18px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1.5px solid #059669;
+  border-radius: 4px;
+  background: white;
+  color: #065f46;
+  z-index: 20;
+  padding: 0 2px;
+  outline: none;
+  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.2);
+}
+
+/* Hours badge shown on completed days (when not editing) */
+.calendar-day .day-hours-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #059669;
+  background: rgba(255,255,255,0.85);
+  padding: 1px 4px;
+  border-radius: 4px;
+  z-index: 15;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ============================================ */
 /* TODAY INDICATOR (RED DOT) */
 /* ============================================ */
 
@@ -244,6 +349,18 @@
   z-index: 20 !important;
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.5) !important;
   pointer-events: none;
+}
+
+/* Completed + today: keep red dot visible above green */
+.calendar-day.completed.today::before {
+  content: "" !important;
+  top: 6px !important;
+  right: 6px !important;
+  width: 7px !important;
+  height: 7px !important;
+  background-color: #ef4444 !important;
+  border-radius: 50% !important;
+  z-index: 20 !important;
 }
 
 .calendar-day.start.today::before,
@@ -265,6 +382,15 @@
   z-index: 15;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
   pointer-events: none;
+}
+
+/* Completed day with note - note icon still visible */
+.calendar-day.completed.has-note::after {
+  content: "💬";
+  bottom: 4px;
+  right: 4px;
+  font-size: 11px;
+  z-index: 16;
 }
 
 /* Priority Fix: Combining Today + Note */
@@ -290,5 +416,12 @@
 }
 
 .calendar-day.start.finish::before {
+  border-radius: var(--accent-br);
+}
+
+/* Completed overrides range edge rounding */
+.calendar-day.completed.start::before,
+.calendar-day.completed.finish::before,
+.calendar-day.completed.workday::before {
   border-radius: var(--accent-br);
 }

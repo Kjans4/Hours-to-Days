@@ -1,15 +1,30 @@
 import TimelineCalendar from './TimelineCalendar'
-import ProgressTracker from './ProgressTracker' // NEW IMPORT
+import ProgressTracker from './ProgressTracker'
+import { useHybridStorage } from '../hooks/useHybridStorage'
 
 function ResultsDisplay({ result }) {
+  // Read dateNotes here so ProgressTracker stays in sync with the calendar
+  const [dateNotes] = useHybridStorage('dateData', {})
+
+  // Derive completedDates to pass to ProgressTracker
+  const completedDates = {}
+  Object.entries(dateNotes).forEach(([date, data]) => {
+    if (data?.completed) {
+      completedDates[date] = { hours: data.hours ?? parseFloat(result.hoursPerDay) }
+    }
+  })
+
   return (
     <div className="results">
       <h2>Results</h2>
 
-      {/* NEW: Progress Tracker Widget */}
-      <ProgressTracker result={result} />
+      {/* Progress Tracker - driven by calendar checkmarks */}
+      <ProgressTracker 
+        result={result}
+        completedDates={completedDates}
+      />
 
-      {/* Existing Results */}
+      {/* Result Items */}
       <div className="result-item">
         <span>Workdays needed:</span>
         <strong>{result.workdays}</strong>
@@ -38,6 +53,7 @@ function ResultsDisplay({ result }) {
         startDateString={result.startDateString}
         finishDateString={result.finishDateString}
         workingDaysArray={result.workingDaysArray}
+        hoursPerDay={parseFloat(result.hoursPerDay)}
       />
 
       {/* Calculation Steps */}

@@ -271,3 +271,37 @@
     padding: 0 1rem 1rem 1rem;
   }
 }
+
+/* Completed day legend swatch */
+.legend-color.completed-legend {
+  background: linear-gradient(to bottom, #10b981 0%, #d1fae5 60%, #ffffff 100%);
+  border: 1.5px solid #10b981;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3);
+}
+ 
+/* Hint text below legend */
+.timeline-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  margin: -0.5rem 1.25rem 0.75rem 1.25rem;
+}
+ 
+/* ============================================ */
+/* ADDITIONS - paste these into                 */
+/* progress-tracker.css                         */
+/* ============================================ */
+ 
+/* Replaces the "+ Log Hours" button */
+.progress-driven-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.3px;
+}
+ 
