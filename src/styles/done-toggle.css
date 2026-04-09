@@ -91,6 +91,7 @@
   color: #065f46;
   text-align: center;
   background: transparent;
+  appearance: none;
   -moz-appearance: textfield;
 }
 
