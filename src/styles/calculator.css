@@ -123,3 +123,27 @@
     margin-bottom: 1rem;
   }
 }
+
+.calculator-project-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.01em;
+}
+ 
+/* ============================================ */
+/* PASTE INTO layout.css                        */
+/* ============================================ */
+ 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}

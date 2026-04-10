@@ -1,14 +1,20 @@
 import TimelineCalendar from './TimelineCalendar'
 import ProgressTracker from './ProgressTracker'
-import { useHybridStorage } from '../hooks/useHybridStorage'
+import { useProjects } from '../hooks/useProjects'
 
-function ResultsDisplay({ result }) {
-  // Read dateNotes here so ProgressTracker stays in sync with the calendar
-  const [dateNotes] = useHybridStorage('dateData', {})
+function ResultsDisplay({ result, activeProject }) {
+  const { updateActiveProject } = useProjects()
 
-  // Derive completedDates to pass to ProgressTracker
+  const dateData = activeProject?.dateData || {}
+
+  const setDateData = (updater) => {
+    const next = typeof updater === 'function' ? updater(dateData) : updater
+    updateActiveProject({ dateData: next })
+  }
+
+  // Derive completedDates for ProgressTracker
   const completedDates = {}
-  Object.entries(dateNotes).forEach(([date, data]) => {
+  Object.entries(dateData).forEach(([date, data]) => {
     if (data?.completed) {
       completedDates[date] = { hours: data.hours ?? parseFloat(result.hoursPerDay) }
     }
@@ -18,13 +24,11 @@ function ResultsDisplay({ result }) {
     <div className="results">
       <h2>Results</h2>
 
-      {/* Progress Tracker - driven by calendar checkmarks */}
-      <ProgressTracker 
+      <ProgressTracker
         result={result}
         completedDates={completedDates}
       />
 
-      {/* Result Items */}
       <div className="result-item">
         <span>Workdays needed:</span>
         <strong>{result.workdays}</strong>
@@ -32,11 +36,11 @@ function ResultsDisplay({ result }) {
 
       <div className="result-item">
         <span>Finish date:</span>
-        <strong>{result.finishDate.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        <strong>{result.finishDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
         })}</strong>
       </div>
 
@@ -48,15 +52,15 @@ function ResultsDisplay({ result }) {
         </strong>
       </div>
 
-      {/* Timeline Calendar */}
-      <TimelineCalendar 
+      <TimelineCalendar
         startDateString={result.startDateString}
         finishDateString={result.finishDateString}
         workingDaysArray={result.workingDaysArray}
         hoursPerDay={parseFloat(result.hoursPerDay)}
+        dateData={dateData}
+        setDateData={setDateData}
       />
 
-      {/* Calculation Steps */}
       <div className="calculation-steps">
         <h3>How we calculated:</h3>
         <ol>

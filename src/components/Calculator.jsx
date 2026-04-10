@@ -2,39 +2,35 @@ import { useState } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
-import { useHybridStorage } from '../hooks/useHybridStorage'
+import { useProjects } from '../hooks/useProjects'
 
 /**
  * Calculator Component
- * Manages the state and logic for calculating a project finish date based on 
- * total effort, daily capacity, and specific working/excluded days.
+ * All inputs are read from and written to the active project via useProjects.
+ * No more flat localStorage keys — everything is project-scoped.
  */
-function Calculator() {
-  // Sets default start date to today in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0]
-  
-  // Helper to get available units (e.g., hours, days, weeks) for the dropdowns
+function Calculator({ activeProject }) {
+  const { updateActiveProject } = useProjects()
   const timeUnits = getTimeUnits()
-  
-  /**
-   * PERSISTENT STATE - ALL USING useHybridStorage
-   * These values save to BOTH localStorage (offline) and Firebase (cloud sync)
-   */
-  const [totalValue, setTotalValue] = useHybridStorage('totalValue', 500)
-  const [totalUnit, setTotalUnit] = useHybridStorage('totalUnit', 'hour')
-  const [dailyValue, setDailyValue] = useHybridStorage('dailyValue', 8)
-  const [dailyUnit, setDailyUnit] = useHybridStorage('dailyUnit', 'hour')
-  const [startDate, setStartDate] = useHybridStorage('startDate', today)
-  const [workingDays, setWorkingDays] = useHybridStorage('workingDays', [1, 2, 3, 4, 5])
-  const [excludedDates, setExcludedDates] = useHybridStorage('excludedDates', [])
-
-  /**
-   * EPHEMERAL STATE
-   * The calculation result is not persisted; it recalculates on user action.
-   */
   const [result, setResult] = useState(null)
 
-  // Configuration for the working days checkbox list
+  // Guard: if no active project yet (first load), show nothing
+  if (!activeProject) return null
+
+  // Read all inputs from the active project
+  const {
+    totalValue,
+    totalUnit,
+    dailyValue,
+    dailyUnit,
+    startDate,
+    workingDays,
+    excludedDates,
+  } = activeProject
+
+  // Helpers to update a single field on the active project
+  const set = (field) => (value) => updateActiveProject({ [field]: value })
+
   const weekdays = [
     { value: 0, label: 'Sun' },
     { value: 1, label: 'Mon' },
@@ -45,35 +41,24 @@ function Calculator() {
     { value: 6, label: 'Sat' },
   ]
 
-  /**
-   * Toggles a weekday in or out of the workingDays array.
-   * Ensures the array stays sorted for consistent logic.
-   */
   const toggleDay = (dayValue) => {
-    setWorkingDays(prev =>
-      prev.includes(dayValue)
-        ? prev.filter(d => d !== dayValue)
-        : [...prev, dayValue].sort()
-    )
+    updateActiveProject({
+      workingDays: workingDays.includes(dayValue)
+        ? workingDays.filter(d => d !== dayValue)
+        : [...workingDays, dayValue].sort()
+    })
   }
 
-  /**
-   * Adds or removes a specific date from the exclusion list (holidays/vacations).
-   */
   const toggleExcludedDate = (dateString) => {
-    setExcludedDates(prev =>
-      prev.includes(dateString)
-        ? prev.filter(d => d !== dateString)
-        : [...prev, dateString].sort()
-    )
+    updateActiveProject({
+      excludedDates: excludedDates.includes(dateString)
+        ? excludedDates.filter(d => d !== dateString)
+        : [...excludedDates, dateString].sort()
+    })
   }
 
-  /**
-   * Triggers the calculation utility function with current state values.
-   * Converts string inputs to floats to ensure mathematical accuracy.
-   */
   const handleCalculate = () => {
-    const result = calculateFinishDate(
+    const res = calculateFinishDate(
       parseFloat(totalValue),
       totalUnit,
       parseFloat(dailyValue),
@@ -82,15 +67,23 @@ function Calculator() {
       startDate,
       excludedDates
     )
-    setResult(result)
+    setResult(res)
   }
 
-  // Basic validation: Prevent calculation if inputs are empty or no working days selected
   const isDisabled = !totalValue || !dailyValue || workingDays.length === 0
 
   return (
     <div className="calculator">
-      {/* SECTION: Total Effort Input */}
+      {/* Project color accent bar */}
+      <div
+        className="calculator-project-bar"
+        style={{ background: activeProject.color }}
+      >
+        <span>{activeProject.emoji}</span>
+        <span>{activeProject.name}</span>
+      </div>
+
+      {/* Total Effort */}
       <div className="input-group">
         <label htmlFor="total-time">Total time needed:</label>
         <div className="input-with-unit">
@@ -98,14 +91,11 @@ function Calculator() {
             id="total-time"
             type="number"
             value={totalValue}
-            onChange={(e) => setTotalValue(e.target.value)}
+            onChange={(e) => set('totalValue')(e.target.value)}
             min="0"
             step="any"
           />
-          <select 
-            value={totalUnit} 
-            onChange={(e) => setTotalUnit(e.target.value)}
-          >
+          <select value={totalUnit} onChange={(e) => set('totalUnit')(e.target.value)}>
             {timeUnits.map(unit => (
               <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
@@ -113,7 +103,7 @@ function Calculator() {
         </div>
       </div>
 
-      {/* SECTION: Daily Capacity Input */}
+      {/* Daily Capacity */}
       <div className="input-group">
         <label htmlFor="daily-time">Time per day:</label>
         <div className="input-with-unit">
@@ -121,14 +111,11 @@ function Calculator() {
             id="daily-time"
             type="number"
             value={dailyValue}
-            onChange={(e) => setDailyValue(e.target.value)}
+            onChange={(e) => set('dailyValue')(e.target.value)}
             min="0"
             step="any"
           />
-          <select 
-            value={dailyUnit} 
-            onChange={(e) => setDailyUnit(e.target.value)}
-          >
+          <select value={dailyUnit} onChange={(e) => set('dailyUnit')(e.target.value)}>
             {timeUnits.map(unit => (
               <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
@@ -136,18 +123,18 @@ function Calculator() {
         </div>
       </div>
 
-      {/* SECTION: Project Start Date */}
+      {/* Start Date */}
       <div className="input-group">
         <label htmlFor="start-date">Start date:</label>
         <input
           id="start-date"
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => set('startDate')(e.target.value)}
         />
       </div>
 
-      {/* SECTION: Weekday Selection */}
+      {/* Working Days */}
       <div className="input-group">
         <label>Working days:</label>
         <div className="weekday-selector">
@@ -164,15 +151,15 @@ function Calculator() {
         </div>
       </div>
 
-      {/* SECTION: Custom Date Exclusions (Holidays, etc.) */}
-      <ExcludeDate 
+      {/* Excluded Dates */}
+      <ExcludeDate
         excludedDates={excludedDates}
         onToggleDate={toggleExcludedDate}
-        onClearAll={() => setExcludedDates([])}
+        onClearAll={() => updateActiveProject({ excludedDates: [] })}
       />
 
-      {/* SECTION: Execution */}
-      <button 
+      {/* Calculate */}
+      <button
         className="calculate-button"
         onClick={handleCalculate}
         disabled={isDisabled}
@@ -180,8 +167,13 @@ function Calculator() {
         Calculate
       </button>
 
-      {/* SECTION: Display Result if calculation has been performed */}
-      {result && <ResultsDisplay result={result} />}
+      {/* Results */}
+      {result && (
+        <ResultsDisplay
+          result={result}
+          activeProject={activeProject}
+        />
+      )}
     </div>
   )
 }
