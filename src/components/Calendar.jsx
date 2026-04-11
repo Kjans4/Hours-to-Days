@@ -6,7 +6,8 @@ const LONG_PRESS_MS = 500
 /**
  * Calendar Component
  * - Single click on any day → onDayClick (opens note modal)
- * - Long-press on a workday → onDayComplete (quick check/uncheck)
+ * - Long-press on a workday → onDayComplete (quick check)
+ * - Long-press on a completed day (any type) → onDayComplete null (quick uncheck)
  */
 function Calendar({ 
   year, 
@@ -53,19 +54,35 @@ function Calendar({
 
   const handlePressStart = (day, dateString, highlightType) => {
     didLongPress.current = false
+
     const isWorkday = ['start', 'workday', 'finish'].includes(highlightType)
-    if (!isWorkday || !onDayComplete) return
+    const isCompleted = !!completedDates[dateString]
+
+    /**
+     * FIX: allow long-press if:
+     *   - it's a workday (to check it), OR
+     *   - it's already completed (to uncheck it, even outside project range)
+     * Previously only workdays were allowed, so completed days outside the
+     * project timeline range could never be unchecked via long-press.
+     */
+    if ((!isWorkday && !isCompleted) || !onDayComplete) return
 
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true
 
+      if (isCompleted) {
+        // Already done — uncheck regardless of workday status
+        onDayComplete(dateString, null)
+        return
+      }
+
+      // Not completed — it must be a workday to check it
       if (isFutureDate(day)) {
         const ok = window.confirm(`${dateString} is a future date. Mark it as completed anyway?`)
         if (!ok) return
       }
 
-      const isCompleted = !!completedDates[dateString]
-      onDayComplete(dateString, isCompleted ? null : hoursPerDay)
+      onDayComplete(dateString, hoursPerDay)
     }, LONG_PRESS_MS)
   }
 
@@ -74,7 +91,6 @@ function Calendar({
   }
 
   const handleClick = (dateString) => {
-    // Swallow click if this interaction was a long-press
     if (didLongPress.current) {
       didLongPress.current = false
       return
@@ -116,11 +132,13 @@ function Calendar({
           onMouseLeave={handlePressEnd}
           onTouchStart={() => handlePressStart(day, dateString, highlightType)}
           onTouchEnd={handlePressEnd}
-          title="Click for notes · Hold to mark done"
+          title={isCompleted
+            ? 'Click for notes · Hold to uncheck'
+            : 'Click for notes · Hold to mark done'
+          }
         >
           <span>{day}</span>
 
-          {/* Hours badge shown on completed days */}
           {isCompleted && completedHours != null && (
             <span className="day-hours-badge">{completedHours}h</span>
           )}
