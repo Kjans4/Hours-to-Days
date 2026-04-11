@@ -101,9 +101,6 @@ function ProjectSwitcher({
         {/* Dropdown */}
         {open && (
           <div className="ps-dropdown">
-            {/* FIX: inner wrapper handles border-radius clipping for the list
-                while the outer .ps-dropdown uses overflow: visible so the
-                context menu popup is never cut off */}
             <div className="ps-dropdown-inner">
               {/* Active projects */}
               <div className="ps-section-label">Active</div>
@@ -208,6 +205,26 @@ function ProjectRow({
   onDelete,
   showArchiveOption,
 }) {
+  const menuBtnRef = useRef(null)
+  const [flipUp, setFlipUp] = useState(false)
+
+  /**
+   * When the context menu opens, measure how much space is below the button
+   * vs above. If there's not enough room below, flip the menu upward.
+   * This prevents it rendering off-screen on mobile.
+   */
+  useEffect(() => {
+    if (!menuOpen || !menuBtnRef.current) {
+      setFlipUp(false)
+      return
+    }
+    const btnRect = menuBtnRef.current.getBoundingClientRect()
+    const estimatedMenuHeight = 180 // ~44px per item × 4 items
+    const spaceBelow = window.innerHeight - btnRect.bottom
+    const spaceAbove = btnRect.top
+    setFlipUp(spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow)
+  }, [menuOpen])
+
   return (
     <div
       className={`ps-row ${isActive ? 'ps-row--active' : ''} ${isArchived ? 'ps-row--archived' : ''}`}
@@ -222,6 +239,7 @@ function ProjectRow({
       )}
 
       <button
+        ref={menuBtnRef}
         className="ps-row-menu-btn"
         onClick={onToggleMenu}
         title="More options"
@@ -229,10 +247,11 @@ function ProjectRow({
         •••
       </button>
 
-      {/* Context menu renders inside ps-row (position: relative),
-          escapes .ps-dropdown-inner clip via ps-dropdown overflow: visible */}
       {menuOpen && (
-        <div className="ps-context-menu" onClick={e => e.stopPropagation()}>
+        <div
+          className={`ps-context-menu ${flipUp ? 'ps-context-menu--flip' : ''}`}
+          onClick={e => e.stopPropagation()}
+        >
           <button onClick={onEdit}>✏️ Rename</button>
           <button onClick={onDuplicate}>📋 Duplicate</button>
           {showArchiveOption && (
