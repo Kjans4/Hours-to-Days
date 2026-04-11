@@ -4,7 +4,7 @@ import Auth from './components/Auth'
 import Navigation from './components/Navigation'
 import ProjectSwitcher from './components/ProjectSwitcher'
 import { useAuth } from './hooks/useAuth'
-import { useProjects } from './hooks/useProjects'
+import { useProjectContext } from './components/ProjectContext'
 
 function App() {
   const { user, loading } = useAuth()
@@ -13,7 +13,6 @@ function App() {
   const {
     projects,
     activeProject,
-    activeProjectId,
     switchProject,
     createProject,
     updateProject,
@@ -21,7 +20,7 @@ function App() {
     archiveProject,
     unarchiveProject,
     deleteProject,
-  } = useProjects()
+  } = useProjectContext()
 
   if (loading) {
     return (
@@ -42,7 +41,6 @@ function App() {
           </div>
 
           <div className="header-right">
-            {/* Project switcher */}
             <ProjectSwitcher
               projects={projects}
               activeProject={activeProject}
@@ -55,7 +53,6 @@ function App() {
               onDelete={deleteProject}
             />
 
-            {/* Auth button */}
             <button
               className="login-btn"
               onClick={() => setShowAuth(true)}
@@ -69,7 +66,6 @@ function App() {
       <Navigation />
 
       <main className="main-compact">
-        {/* Pass activeProject down so Calculator reads/writes project-scoped data */}
         <Calculator activeProject={activeProject} />
       </main>
 

@@ -1,28 +1,24 @@
 import TimelineCalendar from './TimelineCalendar'
 import ProgressTracker from './ProgressTracker'
-import { useProjects } from '../hooks/useProjects'
+import { useProjectContext } from './ProjectContext'
 
 function ResultsDisplay({ result, activeProject }) {
-  const { updateActiveProject } = useProjects()
+  const { updateActiveProject } = useProjectContext()
 
   const dateData = activeProject?.dateData || {}
 
   /**
-   * FIX: setDateData passes a functional updater all the way through
-   * updateActiveProject → useProjects update() → setState(prev => ...)
-   * so it always operates on the latest dateData, never a stale snapshot.
+   * setDateData — always resolves functional updaters against the
+   * current activeProject.dateData before calling updateActiveProject.
+   * This ensures we never write stale data.
    */
   const setDateData = (updater) => {
-    updateActiveProject({
-      // We use a special marker so useProjects can handle functional updaters
-      // for nested fields. See the note below — we instead compute it here.
-      dateData: typeof updater === 'function'
-        ? updater(activeProject?.dateData || {})
-        : updater
-    })
+    const next = typeof updater === 'function'
+      ? updater(activeProject?.dateData || {})
+      : updater
+    updateActiveProject({ dateData: next })
   }
 
-  // Derive completedDates for ProgressTracker
   const completedDates = {}
   Object.entries(dateData).forEach(([date, data]) => {
     if (data?.completed) {
@@ -34,10 +30,7 @@ function ResultsDisplay({ result, activeProject }) {
     <div className="results">
       <h2>Results</h2>
 
-      <ProgressTracker
-        result={result}
-        completedDates={completedDates}
-      />
+      <ProgressTracker result={result} completedDates={completedDates} />
 
       <div className="result-item">
         <span>Workdays needed:</span>
@@ -47,10 +40,7 @@ function ResultsDisplay({ result, activeProject }) {
       <div className="result-item">
         <span>Finish date:</span>
         <strong>{result.finishDate.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         })}</strong>
       </div>
 
