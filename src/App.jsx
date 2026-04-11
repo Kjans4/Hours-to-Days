@@ -2,11 +2,25 @@ import { useState } from 'react'
 import Calculator from './components/Calculator'
 import Auth from './components/Auth'
 import Navigation from './components/Navigation'
+import ProjectSwitcher from './components/ProjectSwitcher'
 import { useAuth } from './hooks/useAuth'
+import { useProjectContext } from './components/ProjectContext'
 
 function App() {
   const { user, loading } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
+
+  const {
+    projects,
+    activeProject,
+    switchProject,
+    createProject,
+    updateProject,
+    duplicateProject,
+    archiveProject,
+    unarchiveProject,
+    deleteProject,
+  } = useProjectContext()
 
   if (loading) {
     return (
@@ -25,20 +39,34 @@ function App() {
             <img src="/clock.svg" alt="Hours to Days Logo" className="header-logo" />
             <h1 className="header-title">Hours to Days</h1>
           </div>
-          
-          <button 
-            className="login-btn"
-            onClick={() => setShowAuth(true)}
-          >
-            {user ? `👤 ${user.email}` : '🔑 Sign In'}
-          </button>
+
+          <div className="header-right">
+            <ProjectSwitcher
+              projects={projects}
+              activeProject={activeProject}
+              onSwitch={switchProject}
+              onCreate={createProject}
+              onUpdate={updateProject}
+              onDuplicate={duplicateProject}
+              onArchive={archiveProject}
+              onUnarchive={unarchiveProject}
+              onDelete={deleteProject}
+            />
+
+            <button
+              className="login-btn"
+              onClick={() => setShowAuth(true)}
+            >
+              {user ? `👤 ${user.email}` : '🔑 Sign In'}
+            </button>
+          </div>
         </div>
       </header>
 
       <Navigation />
 
       <main className="main-compact">
-        <Calculator />
+        <Calculator activeProject={activeProject} />
       </main>
 
       <footer className="app-footer compact">

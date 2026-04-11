@@ -1,153 +1,150 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
-import { useHybridStorage } from '../hooks/useHybridStorage'
+import { useProjectContext } from './ProjectContext'
 
-/**
- * Calculator Component
- * Manages the state and logic for calculating a project finish date based on 
- * total effort, daily capacity, and specific working/excluded days.
- */
-function Calculator() {
-  // Sets default start date to today in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0]
-  
-  // Helper to get available units (e.g., hours, days, weeks) for the dropdowns
+function Calculator({ activeProject }) {
+  const { updateActiveProject } = useProjectContext()
   const timeUnits = getTimeUnits()
-  
-  /**
-   * PERSISTENT STATE - ALL USING useHybridStorage
-   * These values save to BOTH localStorage (offline) and Firebase (cloud sync)
-   */
-  const [totalValue, setTotalValue] = useHybridStorage('totalValue', 500)
-  const [totalUnit, setTotalUnit] = useHybridStorage('totalUnit', 'hour')
-  const [dailyValue, setDailyValue] = useHybridStorage('dailyValue', 8)
-  const [dailyUnit, setDailyUnit] = useHybridStorage('dailyUnit', 'hour')
-  const [startDate, setStartDate] = useHybridStorage('startDate', today)
-  const [workingDays, setWorkingDays] = useHybridStorage('workingDays', [1, 2, 3, 4, 5])
-  const [excludedDates, setExcludedDates] = useHybridStorage('excludedDates', [])
 
-  /**
-   * EPHEMERAL STATE
-   * The calculation result is not persisted; it recalculates on user action.
-   */
   const [result, setResult] = useState(null)
+  const [isStale, setIsStale] = useState(false)
 
-  // Configuration for the working days checkbox list
+  const [localTotalValue, setLocalTotalValue] = useState('')
+  const [localDailyValue, setLocalDailyValue] = useState('')
+
+  const prevProjectId = useRef(null)
+
+  useEffect(() => {
+    if (!activeProject) return
+    const projectChanged = prevProjectId.current !== activeProject.id
+    prevProjectId.current = activeProject.id
+
+    setLocalTotalValue(String(activeProject.totalValue ?? ''))
+    setLocalDailyValue(String(activeProject.dailyValue ?? ''))
+
+    if (projectChanged) {
+      setResult(null)
+      setIsStale(false)
+    }
+  }, [activeProject?.id, activeProject?.totalValue, activeProject?.dailyValue])
+
+  if (!activeProject) return null
+
+  const { totalUnit, dailyUnit, startDate, workingDays, excludedDates } = activeProject
+
+  const markStale = () => { if (result) setIsStale(true) }
+
+  const update = (fields) => {
+    updateActiveProject(fields)
+    markStale()
+  }
+
+  const handleTotalBlur = () => {
+    const val = parseFloat(localTotalValue)
+    if (!isNaN(val) && val > 0) update({ totalValue: val })
+  }
+
+  const handleDailyBlur = () => {
+    const val = parseFloat(localDailyValue)
+    if (!isNaN(val) && val > 0) update({ dailyValue: val })
+  }
+
+  const handleSelectChange = (field) => (e) => update({ [field]: e.target.value })
+
+  const toggleDay = (dayValue) => {
+    update({
+      workingDays: workingDays.includes(dayValue)
+        ? workingDays.filter(d => d !== dayValue)
+        : [...workingDays, dayValue].sort()
+    })
+  }
+
+  const toggleExcludedDate = (dateString) => {
+    update({
+      excludedDates: excludedDates.includes(dateString)
+        ? excludedDates.filter(d => d !== dateString)
+        : [...excludedDates, dateString].sort()
+    })
+  }
+
+  const handleCalculate = () => {
+    const totalVal = parseFloat(localTotalValue)
+    const dailyVal = parseFloat(localDailyValue)
+    if (isNaN(totalVal) || isNaN(dailyVal)) return
+
+    updateActiveProject({ totalValue: totalVal, dailyValue: dailyVal })
+
+    const res = calculateFinishDate(
+      totalVal, totalUnit, dailyVal, dailyUnit,
+      workingDays, startDate, excludedDates
+    )
+    setResult(res)
+    setIsStale(false)
+  }
+
+  const isDisabled =
+    !localTotalValue || !localDailyValue ||
+    parseFloat(localTotalValue) <= 0 ||
+    parseFloat(localDailyValue) <= 0 ||
+    workingDays.length === 0
+
   const weekdays = [
-    { value: 0, label: 'Sun' },
-    { value: 1, label: 'Mon' },
-    { value: 2, label: 'Tue' },
-    { value: 3, label: 'Wed' },
-    { value: 4, label: 'Thu' },
-    { value: 5, label: 'Fri' },
+    { value: 0, label: 'Sun' }, { value: 1, label: 'Mon' },
+    { value: 2, label: 'Tue' }, { value: 3, label: 'Wed' },
+    { value: 4, label: 'Thu' }, { value: 5, label: 'Fri' },
     { value: 6, label: 'Sat' },
   ]
 
-  /**
-   * Toggles a weekday in or out of the workingDays array.
-   * Ensures the array stays sorted for consistent logic.
-   */
-  const toggleDay = (dayValue) => {
-    setWorkingDays(prev =>
-      prev.includes(dayValue)
-        ? prev.filter(d => d !== dayValue)
-        : [...prev, dayValue].sort()
-    )
-  }
-
-  /**
-   * Adds or removes a specific date from the exclusion list (holidays/vacations).
-   */
-  const toggleExcludedDate = (dateString) => {
-    setExcludedDates(prev =>
-      prev.includes(dateString)
-        ? prev.filter(d => d !== dateString)
-        : [...prev, dateString].sort()
-    )
-  }
-
-  /**
-   * Triggers the calculation utility function with current state values.
-   * Converts string inputs to floats to ensure mathematical accuracy.
-   */
-  const handleCalculate = () => {
-    const result = calculateFinishDate(
-      parseFloat(totalValue),
-      totalUnit,
-      parseFloat(dailyValue),
-      dailyUnit,
-      workingDays,
-      startDate,
-      excludedDates
-    )
-    setResult(result)
-  }
-
-  // Basic validation: Prevent calculation if inputs are empty or no working days selected
-  const isDisabled = !totalValue || !dailyValue || workingDays.length === 0
-
   return (
     <div className="calculator">
-      {/* SECTION: Total Effort Input */}
+      <div className="calculator-project-bar" style={{ background: activeProject.color }}>
+        <span>{activeProject.emoji}</span>
+        <span>{activeProject.name}</span>
+      </div>
+
       <div className="input-group">
         <label htmlFor="total-time">Total time needed:</label>
         <div className="input-with-unit">
           <input
-            id="total-time"
-            type="number"
-            value={totalValue}
-            onChange={(e) => setTotalValue(e.target.value)}
-            min="0"
-            step="any"
+            id="total-time" type="number"
+            value={localTotalValue}
+            onChange={(e) => { setLocalTotalValue(e.target.value); markStale() }}
+            onBlur={handleTotalBlur}
+            min="0" step="any"
           />
-          <select 
-            value={totalUnit} 
-            onChange={(e) => setTotalUnit(e.target.value)}
-          >
-            {timeUnits.map(unit => (
-              <option key={unit.value} value={unit.value}>{unit.label}</option>
-            ))}
+          <select value={totalUnit} onChange={handleSelectChange('totalUnit')}>
+            {timeUnits.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
           </select>
         </div>
       </div>
 
-      {/* SECTION: Daily Capacity Input */}
       <div className="input-group">
         <label htmlFor="daily-time">Time per day:</label>
         <div className="input-with-unit">
           <input
-            id="daily-time"
-            type="number"
-            value={dailyValue}
-            onChange={(e) => setDailyValue(e.target.value)}
-            min="0"
-            step="any"
+            id="daily-time" type="number"
+            value={localDailyValue}
+            onChange={(e) => { setLocalDailyValue(e.target.value); markStale() }}
+            onBlur={handleDailyBlur}
+            min="0" step="any"
           />
-          <select 
-            value={dailyUnit} 
-            onChange={(e) => setDailyUnit(e.target.value)}
-          >
-            {timeUnits.map(unit => (
-              <option key={unit.value} value={unit.value}>{unit.label}</option>
-            ))}
+          <select value={dailyUnit} onChange={handleSelectChange('dailyUnit')}>
+            {timeUnits.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
           </select>
         </div>
       </div>
 
-      {/* SECTION: Project Start Date */}
       <div className="input-group">
         <label htmlFor="start-date">Start date:</label>
         <input
-          id="start-date"
-          type="date"
+          id="start-date" type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => update({ startDate: e.target.value })}
         />
       </div>
 
-      {/* SECTION: Weekday Selection */}
       <div className="input-group">
         <label>Working days:</label>
         <div className="weekday-selector">
@@ -164,24 +161,29 @@ function Calculator() {
         </div>
       </div>
 
-      {/* SECTION: Custom Date Exclusions (Holidays, etc.) */}
-      <ExcludeDate 
+      <ExcludeDate
         excludedDates={excludedDates}
         onToggleDate={toggleExcludedDate}
-        onClearAll={() => setExcludedDates([])}
+        onClearAll={() => update({ excludedDates: [] })}
       />
 
-      {/* SECTION: Execution */}
-      <button 
-        className="calculate-button"
+      {isStale && (
+        <div className="stale-banner">
+          ⚠️ Inputs changed — press Calculate to update the timeline
+        </div>
+      )}
+
+      <button
+        className={`calculate-button ${isStale ? 'calculate-button--stale' : ''}`}
         onClick={handleCalculate}
         disabled={isDisabled}
       >
-        Calculate
+        {isStale ? '🔄 Recalculate' : 'Calculate'}
       </button>
 
-      {/* SECTION: Display Result if calculation has been performed */}
-      {result && <ResultsDisplay result={result} />}
+      {result && !isStale && (
+        <ResultsDisplay result={result} activeProject={activeProject} />
+      )}
     </div>
   )
 }
