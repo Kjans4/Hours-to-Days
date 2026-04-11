@@ -8,24 +8,15 @@ const DEFAULT_COLORS = [
 
 const DEFAULT_EMOJIS = ['🚀', '📱', '🎨', '📊', '🛠️', '📝', '💡', '🎯']
 
-/**
- * Generates a unique project ID
- */
 function generateId() {
   return `proj_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
 }
 
-/**
- * Generates a default project name based on existing projects
- */
 function generateName(projects) {
   const activeCount = projects.filter(p => !p.archived).length
   return `Project ${activeCount + 1}`
 }
 
-/**
- * Creates a blank project object with defaults
- */
 function createBlankProject(name, existingProjects = []) {
   const index = existingProjects.length % DEFAULT_COLORS.length
   return {
@@ -35,8 +26,6 @@ function createBlankProject(name, existingProjects = []) {
     color: DEFAULT_COLORS[index % DEFAULT_COLORS.length],
     archived: false,
     createdAt: new Date().toISOString(),
-
-    // Calculator inputs
     totalValue: 500,
     totalUnit: 'hour',
     dailyValue: 8,
@@ -44,38 +33,29 @@ function createBlankProject(name, existingProjects = []) {
     startDate: new Date().toISOString().split('T')[0],
     workingDays: [1, 2, 3, 4, 5],
     excludedDates: [],
-
-    // Per-project notes, tasks, completed days
     dateData: {},
-
-    // Last calculation result (serializable fields only)
     result: null
   }
 }
 
-/**
- * Migrates legacy flat localStorage keys into a single Project 1
- * Called once on first load if 'projects' key doesn't exist yet
- */
 function migrateLegacyData() {
   try {
-    const hasProjects = localStorage.getItem('projects')
-    if (hasProjects) return null // Already migrated
+    // Already migrated
+    if (localStorage.getItem('projectState')) return null
 
-    // Check if any legacy data exists
     const totalValue = localStorage.getItem('totalValue')
-    if (!totalValue) return null // No legacy data, fresh start
+    if (!totalValue) return null
 
     const today = new Date().toISOString().split('T')[0]
+    const id = generateId()
 
     const legacyProject = {
-      id: generateId(),
+      id,
       name: 'Project 1',
       emoji: '🚀',
       color: DEFAULT_COLORS[0],
       archived: false,
       createdAt: new Date().toISOString(),
-
       totalValue: JSON.parse(localStorage.getItem('totalValue') || '500'),
       totalUnit: JSON.parse(localStorage.getItem('totalUnit') || '"hour"'),
       dailyValue: JSON.parse(localStorage.getItem('dailyValue') || '8'),
@@ -87,7 +67,7 @@ function migrateLegacyData() {
       result: null
     }
 
-    return legacyProject
+    return { projects: [legacyProject], activeProjectId: id }
   } catch (e) {
     console.error('Migration error:', e)
     return null
@@ -95,119 +75,149 @@ function migrateLegacyData() {
 }
 
 /**
- * useProjects — central hook for all project management
+ * useProjects
  *
- * Returns:
- *   projects, activeProject, activeProjectId,
- *   setActiveProjectId, createProject, updateProject,
- *   updateActiveProject, duplicateProject,
- *   archiveProject, unarchiveProject, deleteProject
+ * KEY FIX: projects and activeProjectId are stored together in ONE key
+ * ('projectState') so they are ALWAYS updated atomically and never out of sync.
+ *
+ * KEY FIX: updateActiveProject reads activeProjectId from INSIDE the state
+ * updater function, not from a closure — so it always has the latest value.
  */
 export function useProjects() {
-  const [projects, setProjects] = useHybridStorage('projects', [])
-  const [activeProjectId, setActiveProjectId] = useHybridStorage('activeProjectId', null)
+  // Single key holds both arrays — eliminates the two-key sync problem
+  const [state, setState] = useHybridStorage('projectState', null)
 
-  // ─── Migration: run once on first load ───────────────────────────────────
+  // ─── Initialize / migrate on first load ──────────────────────────────────
   useEffect(() => {
-    if (projects.length === 0) {
-      const legacy = migrateLegacyData()
-      if (legacy) {
-        setProjects([legacy])
-        setActiveProjectId(legacy.id)
-      } else {
-        // Truly fresh start — create default project
-        const fresh = createBlankProject('Project 1', [])
-        setProjects([fresh])
-        setActiveProjectId(fresh.id)
-      }
-    } else if (!activeProjectId || !projects.find(p => p.id === activeProjectId)) {
-      // Active ID is stale — default to first active project
-      const first = projects.find(p => !p.archived) || projects[0]
-      if (first) setActiveProjectId(first.id)
+    if (state !== null) return // Already initialized
+
+    const migrated = migrateLegacyData()
+    if (migrated) {
+      setState(migrated)
+      return
     }
+
+    // Fresh start
+    const fresh = createBlankProject('Project 1', [])
+    setState({ projects: [fresh], activeProjectId: fresh.id })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Derived ─────────────────────────────────────────────────────────────
+  // Safe defaults while state initializes
+  const projects = state?.projects || []
+  const activeProjectId = state?.activeProjectId || null
   const activeProject = projects.find(p => p.id === activeProjectId) || projects[0] || null
 
-  // ─── Switch project (auto-saves current via useHybridStorage) ────────────
+  // ─── Internal atomic updater ─────────────────────────────────────────────
+  // All mutations go through this — it always works on the latest state
+  const update = (updater) => {
+    setState(prev => {
+      const current = prev || { projects: [], activeProjectId: null }
+      const next = updater(current)
+      return next
+    })
+  }
+
+  // ─── Switch project ───────────────────────────────────────────────────────
   const switchProject = (id) => {
-    setActiveProjectId(id)
+    update(s => ({ ...s, activeProjectId: id }))
   }
 
-  // ─── Update any fields on the active project ─────────────────────────────
+  // ─── Update fields on the active project ─────────────────────────────────
+  // FIX: reads activeProjectId from `s` (current state), not from closure
   const updateActiveProject = (fields) => {
-    setProjects(prev => prev.map(p =>
-      p.id === activeProjectId ? { ...p, ...fields } : p
-    ))
+    update(s => ({
+      ...s,
+      projects: s.projects.map(p =>
+        p.id === s.activeProjectId ? { ...p, ...fields } : p
+      )
+    }))
   }
 
-  // ─── Update any project by id ────────────────────────────────────────────
+  // ─── Update any project by id ─────────────────────────────────────────────
   const updateProject = (id, fields) => {
-    setProjects(prev => prev.map(p =>
-      p.id === id ? { ...p, ...fields } : p
-    ))
+    update(s => ({
+      ...s,
+      projects: s.projects.map(p =>
+        p.id === id ? { ...p, ...fields } : p
+      )
+    }))
   }
 
-  // ─── Create a new blank project and switch to it ─────────────────────────
+  // ─── Create new project ───────────────────────────────────────────────────
   const createProject = () => {
-    const name = generateName(projects)
-    const newProject = createBlankProject(name, projects)
-    setProjects(prev => [...prev, newProject])
-    setActiveProjectId(newProject.id)
-    return newProject
-  }
-
-  // ─── Duplicate a project ─────────────────────────────────────────────────
-  const duplicateProject = (id) => {
-    const source = projects.find(p => p.id === id)
-    if (!source) return
-
-    const duplicate = {
-      ...source,
-      id: generateId(),
-      name: `${source.name} (copy)`,
-      archived: false,
-      createdAt: new Date().toISOString(),
-      // Deep-copy nested objects
-      workingDays: [...source.workingDays],
-      excludedDates: [...source.excludedDates],
-      dateData: JSON.parse(JSON.stringify(source.dateData || {})),
-    }
-
-    setProjects(prev => [...prev, duplicate])
-    setActiveProjectId(duplicate.id)
-    return duplicate
-  }
-
-  // ─── Archive / unarchive ─────────────────────────────────────────────────
-  const archiveProject = (id) => {
-    setProjects(prev => prev.map(p =>
-      p.id === id ? { ...p, archived: true } : p
-    ))
-    // If we archived the active project, switch to next available
-    if (id === activeProjectId) {
-      const next = projects.find(p => p.id !== id && !p.archived)
-      if (next) {
-        setActiveProjectId(next.id)
-      } else {
-        // No active projects left — create a fresh one
-        const fresh = createBlankProject(generateName(projects), projects)
-        setProjects(prev => [...prev, fresh])
-        setActiveProjectId(fresh.id)
+    update(s => {
+      const name = generateName(s.projects)
+      const newProject = createBlankProject(name, s.projects)
+      return {
+        projects: [...s.projects, newProject],
+        activeProjectId: newProject.id
       }
-    }
+    })
+  }
+
+  // ─── Duplicate ────────────────────────────────────────────────────────────
+  const duplicateProject = (id) => {
+    update(s => {
+      const source = s.projects.find(p => p.id === id)
+      if (!source) return s
+
+      const duplicate = {
+        ...source,
+        id: generateId(),
+        name: `${source.name} (copy)`,
+        archived: false,
+        createdAt: new Date().toISOString(),
+        workingDays: [...source.workingDays],
+        excludedDates: [...source.excludedDates],
+        dateData: JSON.parse(JSON.stringify(source.dateData || {}))
+      }
+
+      return {
+        projects: [...s.projects, duplicate],
+        activeProjectId: duplicate.id
+      }
+    })
+  }
+
+  // ─── Archive ──────────────────────────────────────────────────────────────
+  const archiveProject = (id) => {
+    update(s => {
+      const updated = s.projects.map(p =>
+        p.id === id ? { ...p, archived: true } : p
+      )
+
+      let nextActiveId = s.activeProjectId
+      if (id === s.activeProjectId) {
+        const next = updated.find(p => !p.archived)
+        if (next) {
+          nextActiveId = next.id
+        } else {
+          // No active projects left — create one
+          const fresh = createBlankProject(generateName(updated), updated)
+          updated.push(fresh)
+          nextActiveId = fresh.id
+        }
+      }
+
+      return { projects: updated, activeProjectId: nextActiveId }
+    })
   }
 
   const unarchiveProject = (id) => {
-    setProjects(prev => prev.map(p =>
-      p.id === id ? { ...p, archived: false } : p
-    ))
+    update(s => ({
+      ...s,
+      projects: s.projects.map(p =>
+        p.id === id ? { ...p, archived: false } : p
+      )
+    }))
   }
 
-  // ─── Permanent delete (only allowed on archived projects) ────────────────
+  // ─── Delete (permanent, archived only) ────────────────────────────────────
   const deleteProject = (id) => {
-    setProjects(prev => prev.filter(p => p.id !== id))
+    update(s => ({
+      ...s,
+      projects: s.projects.filter(p => p.id !== id)
+    }))
   }
 
   return {

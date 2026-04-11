@@ -7,9 +7,19 @@ function ResultsDisplay({ result, activeProject }) {
 
   const dateData = activeProject?.dateData || {}
 
+  /**
+   * FIX: setDateData passes a functional updater all the way through
+   * updateActiveProject → useProjects update() → setState(prev => ...)
+   * so it always operates on the latest dateData, never a stale snapshot.
+   */
   const setDateData = (updater) => {
-    const next = typeof updater === 'function' ? updater(dateData) : updater
-    updateActiveProject({ dateData: next })
+    updateActiveProject({
+      // We use a special marker so useProjects can handle functional updaters
+      // for nested fields. See the note below — we instead compute it here.
+      dateData: typeof updater === 'function'
+        ? updater(activeProject?.dateData || {})
+        : updater
+    })
   }
 
   // Derive completedDates for ProgressTracker

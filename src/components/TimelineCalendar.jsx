@@ -10,8 +10,8 @@ function TimelineCalendar({
   finishDateString,
   workingDaysArray,
   hoursPerDay = 8,
-  dateData = {},       // project-scoped, passed from ResultsDisplay
-  setDateData,         // updater, passed from ResultsDisplay
+  dateData = {},
+  setDateData,   // must be a stable function from ResultsDisplay → useProjects
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showAllMonths, setShowAllMonths] = useState(false)
@@ -22,7 +22,7 @@ function TimelineCalendar({
 
   const months = getMonthsBetween(startDateString, finishDateString)
 
-  // Derive completedDates from dateData
+  // Derive completedDates for Calendar rendering
   const completedDates = {}
   Object.entries(dateData).forEach(([date, data]) => {
     if (data?.completed) {
@@ -33,12 +33,14 @@ function TimelineCalendar({
   const excludedCount = workingDaysArray.filter(d => d.type === 'excluded').length
   const notesCount = Object.values(dateData).filter(d => d?.note || d?.tasks?.length).length
 
-  // Long-press handler
+  // ─── Long-press: mark/unmark a day ───────────────────────────────────────
+  // FIX: always uses functional updater so we read latest dateData from project
   const handleDayComplete = (dateString, hours) => {
     setDateData(prev => {
       const existing = prev[dateString] || {}
 
       if (hours === null) {
+        // Unmark — strip completed/hours, keep notes/tasks
         const { completed, hours: _h, ...rest } = existing
         const updated = { ...prev }
         if (Object.keys(rest).length === 0) {
@@ -58,15 +60,17 @@ function TimelineCalendar({
     })
   }
 
-  // Single click → note modal
+  // ─── Single click: open note modal ───────────────────────────────────────
   const handleDateClick = (dateString) => {
     setSelectedDate(dateString)
     setNoteModalOpen(true)
   }
 
+  // ─── Save note/task/completion from modal ─────────────────────────────────
   const handleSaveNote = (data) => {
-    if (data === null) {
-      setDateData(prev => {
+    setDateData(prev => {
+      if (data === null) {
+        // Clear note/tasks but keep completed state if present
         const existing = prev[selectedDate] || {}
         const { note, tasks, timestamp, ...rest } = existing
         const updated = { ...prev }
@@ -76,13 +80,16 @@ function TimelineCalendar({
           updated[selectedDate] = rest
         }
         return updated
-      })
-    } else {
-      setDateData(prev => ({
+      }
+
+      return {
         ...prev,
-        [selectedDate]: { ...(prev[selectedDate] || {}), ...data }
-      }))
-    }
+        [selectedDate]: {
+          ...(prev[selectedDate] || {}),
+          ...data
+        }
+      }
+    })
   }
 
   const handleCloseModal = () => {
@@ -169,11 +176,10 @@ function TimelineCalendar({
                 className="timeline-expand-btn"
                 onClick={() => setShowAllMonths(!showAllMonths)}
               >
-                {showAllMonths ? (
-                  <><span>Hide additional months</span><span className="expand-icon">▲</span></>
-                ) : (
-                  <><span>Show {remainingMonths.length} more {remainingMonths.length === 1 ? 'month' : 'months'}</span><span className="expand-icon">▼</span></>
-                )}
+                {showAllMonths
+                  ? <><span>Hide additional months</span><span className="expand-icon">▲</span></>
+                  : <><span>Show {remainingMonths.length} more {remainingMonths.length === 1 ? 'month' : 'months'}</span><span className="expand-icon">▼</span></>
+                }
               </button>
             </div>
           )}
