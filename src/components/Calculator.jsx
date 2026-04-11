@@ -16,19 +16,26 @@ function Calculator({ activeProject }) {
 
   const prevProjectId = useRef(null)
 
+  /**
+   * FIX: only sync local inputs when the project ID changes (project switch).
+   * We do NOT include totalValue/dailyValue in deps — that would overwrite
+   * what the user is currently typing whenever any external update touches
+   * those fields (e.g. duplication, Firebase sync).
+   */
   useEffect(() => {
     if (!activeProject) return
+
     const projectChanged = prevProjectId.current !== activeProject.id
     prevProjectId.current = activeProject.id
 
-    setLocalTotalValue(String(activeProject.totalValue ?? ''))
-    setLocalDailyValue(String(activeProject.dailyValue ?? ''))
-
     if (projectChanged) {
+      // Project switched — load fresh values and clear result
+      setLocalTotalValue(String(activeProject.totalValue ?? ''))
+      setLocalDailyValue(String(activeProject.dailyValue ?? ''))
       setResult(null)
       setIsStale(false)
     }
-  }, [activeProject?.id, activeProject?.totalValue, activeProject?.dailyValue])
+  }, [activeProject?.id]) // ← ONLY react to project ID change, not value changes
 
   if (!activeProject) return null
 

@@ -11,7 +11,7 @@ function TimelineCalendar({
   workingDaysArray,
   hoursPerDay = 8,
   dateData = {},
-  setDateData,   // must be a stable function from ResultsDisplay → useProjects
+  setDateData,
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showAllMonths, setShowAllMonths] = useState(false)
@@ -22,7 +22,6 @@ function TimelineCalendar({
 
   const months = getMonthsBetween(startDateString, finishDateString)
 
-  // Derive completedDates for Calendar rendering
   const completedDates = {}
   Object.entries(dateData).forEach(([date, data]) => {
     if (data?.completed) {
@@ -34,13 +33,11 @@ function TimelineCalendar({
   const notesCount = Object.values(dateData).filter(d => d?.note || d?.tasks?.length).length
 
   // ─── Long-press: mark/unmark a day ───────────────────────────────────────
-  // FIX: always uses functional updater so we read latest dateData from project
   const handleDayComplete = (dateString, hours) => {
     setDateData(prev => {
       const existing = prev[dateString] || {}
 
       if (hours === null) {
-        // Unmark — strip completed/hours, keep notes/tasks
         const { completed, hours: _h, ...rest } = existing
         const updated = { ...prev }
         if (Object.keys(rest).length === 0) {
@@ -67,25 +64,28 @@ function TimelineCalendar({
   }
 
   // ─── Save note/task/completion from modal ─────────────────────────────────
+  // FIX: capture dateKey immediately so it's not affected by
+  // selectedDate being cleared when the modal closes.
   const handleSaveNote = (data) => {
+    const dateKey = selectedDate // capture now, before modal closes
+
     setDateData(prev => {
       if (data === null) {
-        // Clear note/tasks but keep completed state if present
-        const existing = prev[selectedDate] || {}
+        const existing = prev[dateKey] || {}
         const { note, tasks, timestamp, ...rest } = existing
         const updated = { ...prev }
         if (Object.keys(rest).length === 0) {
-          delete updated[selectedDate]
+          delete updated[dateKey]
         } else {
-          updated[selectedDate] = rest
+          updated[dateKey] = rest
         }
         return updated
       }
 
       return {
         ...prev,
-        [selectedDate]: {
-          ...(prev[selectedDate] || {}),
+        [dateKey]: {
+          ...(prev[dateKey] || {}),
           ...data
         }
       }

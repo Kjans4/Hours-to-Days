@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import TaskItem from './TaskItem'
 
 function NoteModal({ 
@@ -17,30 +17,49 @@ function NoteModal({
   const [tasksExpanded, setTasksExpanded] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
   const [showTaskInput, setShowTaskInput] = useState(false)
-
-  // ─── Completion state ──────────────────────────────────────────────────
   const [isCompleted, setIsCompleted] = useState(false)
   const [completedHours, setCompletedHours] = useState('')
 
-  // Load existing data when modal opens
+  /**
+   * FIX: track whether the modal is already initialized for the current open session.
+   * We only load from existingData when the modal transitions from closed → open.
+   * Subsequent re-renders that change existingData (e.g. Firebase sync completing
+   * mid-edit) do NOT reset the user's in-progress edits.
+   */
+  const initializedRef = useRef(false)
+
   useEffect(() => {
-    if (isOpen && existingData) {
-      setNoteText(existingData.note || '')
-      setTasks(existingData.tasks || [])
-      setNoteExpanded(!!existingData.note)
-      setTasksExpanded((existingData.tasks || []).length > 0)
-      setIsCompleted(!!existingData.completed)
-      setCompletedHours(existingData.hours != null ? String(existingData.hours) : String(hoursPerDay))
-    } else if (isOpen) {
-      setNoteText('')
-      setTasks([])
-      setNoteExpanded(false)
-      setTasksExpanded(false)
-      setShowTaskInput(false)
-      setIsCompleted(false)
-      setCompletedHours(String(hoursPerDay))
+    if (isOpen && !initializedRef.current) {
+      // Modal just opened — load existing data once
+      initializedRef.current = true
+
+      if (existingData) {
+        setNoteText(existingData.note || '')
+        setTasks(existingData.tasks || [])
+        setNoteExpanded(!!existingData.note)
+        setTasksExpanded((existingData.tasks || []).length > 0)
+        setIsCompleted(!!existingData.completed)
+        setCompletedHours(
+          existingData.hours != null
+            ? String(existingData.hours)
+            : String(hoursPerDay)
+        )
+      } else {
+        setNoteText('')
+        setTasks([])
+        setNoteExpanded(false)
+        setTasksExpanded(false)
+        setShowTaskInput(false)
+        setIsCompleted(false)
+        setCompletedHours(String(hoursPerDay))
+      }
     }
-  }, [isOpen, existingData, hoursPerDay])
+
+    if (!isOpen) {
+      // Modal closed — reset the guard for next open
+      initializedRef.current = false
+    }
+  }, [isOpen]) // ← only depends on isOpen, NOT existingData or hoursPerDay
 
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
@@ -95,7 +114,6 @@ function NoteModal({
       timestamp: new Date().toISOString()
     }
 
-    // If everything is empty, signal deletion
     const hasContent = dataToSave.note || dataToSave.tasks || dataToSave.completed
     onSave(hasContent ? dataToSave : null)
     handleClose()
@@ -146,7 +164,7 @@ function NoteModal({
         {/* Body */}
         <div className="note-modal-body">
 
-          {/* ── MARK AS DONE TOGGLE (prominent, at top) ── */}
+          {/* Mark as Done toggle */}
           <div className={`done-toggle-section ${isCompleted ? 'done-toggle-section--active' : ''}`}>
             <div className="done-toggle-left">
               <span className="done-toggle-icon">{isCompleted ? '✅' : '⬜'}</span>
@@ -161,7 +179,6 @@ function NoteModal({
             </div>
 
             <div className="done-toggle-right">
-              {/* Hours input — only visible when completed */}
               {isCompleted && (
                 <div className="done-hours-input-wrap">
                   <input
@@ -177,8 +194,6 @@ function NoteModal({
                   <span className="done-hours-unit">hrs</span>
                 </div>
               )}
-
-              {/* Toggle button */}
               <button
                 className={`done-toggle-btn ${isCompleted ? 'done-toggle-btn--active' : ''}`}
                 onClick={handleToggleComplete}
@@ -196,7 +211,6 @@ function NoteModal({
             >
               <span>{noteExpanded ? '▼' : '▶'} Note</span>
             </button>
-
             {noteExpanded && (
               <div className="section-content">
                 <textarea
@@ -224,7 +238,6 @@ function NoteModal({
                 {tasks.length > 0 && ` (${tasks.length})`}
               </span>
             </button>
-
             {tasksExpanded && (
               <div className="section-content">
                 {tasks.length > 0 && (
@@ -239,7 +252,6 @@ function NoteModal({
                     ))}
                   </div>
                 )}
-
                 {showTaskInput ? (
                   <div className="task-input-wrapper">
                     <input

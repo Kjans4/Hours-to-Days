@@ -8,17 +8,26 @@ function ResultsDisplay({ result, activeProject }) {
   const dateData = activeProject?.dateData || {}
 
   /**
-   * setDateData — always resolves functional updaters against the
-   * current activeProject.dateData before calling updateActiveProject.
-   * This ensures we never write stale data.
+   * FIX: setDateData passes a functional updater all the way into
+   * updateActiveProject, which resolves it against the CURRENT project
+   * inside the setState callback — never a stale snapshot.
+   *
+   * TimelineCalendar calls: setDateData(prev => ({ ...prev, [date]: data }))
+   * That function is passed as-is to updateActiveProject, which calls it
+   * with the live current project inside update(s => ...).
    */
-  const setDateData = (updater) => {
-    const next = typeof updater === 'function'
-      ? updater(activeProject?.dateData || {})
-      : updater
-    updateActiveProject({ dateData: next })
+  const setDateData = (updaterOrValue) => {
+    if (typeof updaterOrValue === 'function') {
+      // Pass functional updater through — resolved against current project
+      updateActiveProject(currentProject => ({
+        dateData: updaterOrValue(currentProject.dateData || {})
+      }))
+    } else {
+      updateActiveProject({ dateData: updaterOrValue })
+    }
   }
 
+  // Derive completedDates for ProgressTracker
   const completedDates = {}
   Object.entries(dateData).forEach(([date, data]) => {
     if (data?.completed) {

@@ -38,11 +38,32 @@ function createBlankProject(name, existingProjects = []) {
   }
 }
 
+/**
+ * Migrates legacy data into the new single-key projectState format.
+ * Handles three cases:
+ *   1. Already migrated (projectState exists) → skip
+ *   2. Old two-key format (projects + activeProjectId keys) → merge into projectState
+ *   3. Flat legacy keys (totalValue, startDate, etc.) → bundle into Project 1
+ *   4. Fresh start → null (caller creates blank project)
+ */
 function migrateLegacyData() {
   try {
-    // Already migrated
+    // Case 1: already on new format
     if (localStorage.getItem('projectState')) return null
 
+    // Case 2: old two-key format from previous useProjects version
+    const oldProjects = localStorage.getItem('projects')
+    const oldActiveId = localStorage.getItem('activeProjectId')
+    if (oldProjects && oldActiveId) {
+      const projects = JSON.parse(oldProjects)
+      const activeProjectId = JSON.parse(oldActiveId)
+      // Clean up old keys
+      localStorage.removeItem('projects')
+      localStorage.removeItem('activeProjectId')
+      return { projects, activeProjectId }
+    }
+
+    // Case 3: flat legacy keys from original single-project version
     const totalValue = localStorage.getItem('totalValue')
     if (!totalValue) return null
 
@@ -77,19 +98,20 @@ function migrateLegacyData() {
 /**
  * useProjects
  *
- * KEY FIX: projects and activeProjectId are stored together in ONE key
- * ('projectState') so they are ALWAYS updated atomically and never out of sync.
+ * Single storage key 'projectState' holds { projects, activeProjectId }
+ * atomically — no sync issues between two separate keys.
  *
- * KEY FIX: updateActiveProject reads activeProjectId from INSIDE the state
- * updater function, not from a closure — so it always has the latest value.
+ * updateActiveProject accepts either:
+ *   - a plain fields object: { dateData: {...} }
+ *   - a function: (currentProject) => ({ dateData: {...} })
+ * This lets callers like TimelineCalendar always work on the latest state.
  */
 export function useProjects() {
-  // Single key holds both arrays — eliminates the two-key sync problem
   const [state, setState] = useHybridStorage('projectState', null)
 
   // ─── Initialize / migrate on first load ──────────────────────────────────
   useEffect(() => {
-    if (state !== null) return // Already initialized
+    if (state !== null) return
 
     const migrated = migrateLegacyData()
     if (migrated) {
@@ -97,23 +119,19 @@ export function useProjects() {
       return
     }
 
-    // Fresh start
     const fresh = createBlankProject('Project 1', [])
     setState({ projects: [fresh], activeProjectId: fresh.id })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Safe defaults while state initializes
   const projects = state?.projects || []
   const activeProjectId = state?.activeProjectId || null
   const activeProject = projects.find(p => p.id === activeProjectId) || projects[0] || null
 
   // ─── Internal atomic updater ─────────────────────────────────────────────
-  // All mutations go through this — it always works on the latest state
   const update = (updater) => {
     setState(prev => {
       const current = prev || { projects: [], activeProjectId: null }
-      const next = updater(current)
-      return next
+      return updater(current)
     })
   }
 
@@ -122,14 +140,25 @@ export function useProjects() {
     update(s => ({ ...s, activeProjectId: id }))
   }
 
-  // ─── Update fields on the active project ─────────────────────────────────
-  // FIX: reads activeProjectId from `s` (current state), not from closure
-  const updateActiveProject = (fields) => {
+  /**
+   * updateActiveProject
+   *
+   * FIX: accepts either a plain fields object OR a function.
+   * When a function is passed, it receives the CURRENT project object
+   * from inside the setState callback — never a stale closure snapshot.
+   *
+   * Usage:
+   *   updateActiveProject({ startDate: '2026-05-01' })
+   *   updateActiveProject(p => ({ dateData: { ...p.dateData, [date]: data } }))
+   */
+  const updateActiveProject = (fieldsOrFn) => {
     update(s => ({
       ...s,
-      projects: s.projects.map(p =>
-        p.id === s.activeProjectId ? { ...p, ...fields } : p
-      )
+      projects: s.projects.map(p => {
+        if (p.id !== s.activeProjectId) return p
+        const fields = typeof fieldsOrFn === 'function' ? fieldsOrFn(p) : fieldsOrFn
+        return { ...p, ...fields }
+      })
     }))
   }
 
@@ -192,7 +221,6 @@ export function useProjects() {
         if (next) {
           nextActiveId = next.id
         } else {
-          // No active projects left — create one
           const fresh = createBlankProject(generateName(updated), updated)
           updated.push(fresh)
           nextActiveId = fresh.id

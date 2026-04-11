@@ -3,7 +3,6 @@ function ProgressTracker({ result, completedDates = {} }) {
   const totalHours = parseFloat(result.totalHours)
   const hoursPerDay = parseFloat(result.hoursPerDay)
 
-  // Derive all stats from completedDates
   const completedEntries = Object.values(completedDates)
   const hoursLogged = completedEntries.reduce((sum, d) => sum + (d.hours || 0), 0)
   const daysCompleted = completedEntries.length
@@ -12,11 +11,24 @@ function ProgressTracker({ result, completedDates = {} }) {
   const hoursRemaining = Math.max(0, totalHours - hoursLogged)
   const daysRemaining = Math.max(0, totalWorkdays - daysCompleted)
 
-  // Estimated completion date based on remaining work
-  const today = new Date()
-  const estimatedDaysLeft = Math.ceil(hoursRemaining / hoursPerDay)
-  const estimatedCompletion = new Date(today)
-  estimatedCompletion.setDate(estimatedCompletion.getDate() + estimatedDaysLeft)
+  /**
+   * FIX: estimated completion advances by WORKDAYS, not calendar days.
+   * Uses result.workingDays to know which days of the week are working days,
+   * then counts forward that many working days from today.
+   */
+  const workingDaySet = new Set(result.workingDays || [1, 2, 3, 4, 5])
+  const workdaysLeft = Math.ceil(hoursRemaining / hoursPerDay)
+
+  const estimatedCompletion = (() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    let counted = 0
+    while (counted < workdaysLeft) {
+      date.setDate(date.getDate() + 1)
+      if (workingDaySet.has(date.getDay())) counted++
+    }
+    return date
+  })()
 
   return (
     <div className="progress-tracker">
@@ -25,7 +37,6 @@ function ProgressTracker({ result, completedDates = {} }) {
         <span className="progress-driven-label">Via calendar</span>
       </div>
 
-      {/* Stats */}
       <div className="progress-stats">
         <div className="stat-item">
           <span className="stat-label">Days Done</span>
@@ -41,7 +52,6 @@ function ProgressTracker({ result, completedDates = {} }) {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="progress-bar-container">
         <div className="progress-bar-wrapper">
           <div 
@@ -58,7 +68,6 @@ function ProgressTracker({ result, completedDates = {} }) {
         )}
       </div>
 
-      {/* Status */}
       <div className="progress-status">
         {progressPercent === 0 ? (
           <p className="status-message">
@@ -66,7 +75,8 @@ function ProgressTracker({ result, completedDates = {} }) {
           </p>
         ) : progressPercent < 100 ? (
           <p className="status-message">
-            ⏳ {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left · Est. {estimatedCompletion.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            ⏳ {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} left · Est.{' '}
+            {estimatedCompletion.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </p>
         ) : (
           <p className="status-message success">

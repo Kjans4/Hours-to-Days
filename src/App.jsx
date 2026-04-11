@@ -52,7 +52,6 @@ function App() {
               onUnarchive={unarchiveProject}
               onDelete={deleteProject}
             />
-
             <button
               className="login-btn"
               onClick={() => setShowAuth(true)}
