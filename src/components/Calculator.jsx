@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { calculateFinishDate, getTimeUnits } from '../utils/calculations'
 import ResultsDisplay from './ResultsDisplay'
 import ExcludeDate from './ExcludeDate'
@@ -7,30 +7,42 @@ import { useProjects } from '../hooks/useProjects'
 /**
  * Calculator Component
  *
- * FIX: Number inputs use LOCAL state while the user types,
- * then sync to the project on blur. This prevents every keystroke
- * from firing updateActiveProject and causing stale-closure issues.
+ * KEY FIX: result is cleared whenever any input changes so the calendar
+ * never shows stale data. A "recalculate" banner appears to guide the user.
  *
- * Select and date inputs sync immediately (no debounce needed).
+ * Number inputs use local state while typing, sync to project on blur.
+ * All other inputs sync immediately and also clear result.
  */
 function Calculator({ activeProject }) {
   const { updateActiveProject } = useProjects()
   const timeUnits = getTimeUnits()
-  const [result, setResult] = useState(null)
 
-  // Local controlled state for number inputs (avoids update-on-every-keystroke)
+  const [result, setResult] = useState(null)
+  const [isStale, setIsStale] = useState(false) // inputs changed after last calc
+
+  // Local state for number inputs (avoids update-on-every-keystroke)
   const [localTotalValue, setLocalTotalValue] = useState('')
   const [localDailyValue, setLocalDailyValue] = useState('')
 
-  // Sync local inputs when the active project changes (e.g. switching projects)
+  // Track previous project ID so we can reset on project switch
+  const prevProjectId = useRef(null)
+
+  // Sync local inputs when active project changes (project switch or first load)
   useEffect(() => {
-    if (activeProject) {
-      setLocalTotalValue(String(activeProject.totalValue ?? ''))
-      setLocalDailyValue(String(activeProject.dailyValue ?? ''))
-      // Reset result when switching projects so stale results don't show
+    if (!activeProject) return
+
+    const projectChanged = prevProjectId.current !== activeProject.id
+    prevProjectId.current = activeProject.id
+
+    setLocalTotalValue(String(activeProject.totalValue ?? ''))
+    setLocalDailyValue(String(activeProject.dailyValue ?? ''))
+
+    if (projectChanged) {
+      // Clear result when switching projects
       setResult(null)
+      setIsStale(false)
     }
-  }, [activeProject?.id]) // only re-sync when the project ID changes
+  }, [activeProject?.id, activeProject?.totalValue, activeProject?.dailyValue])
 
   if (!activeProject) return null
 
@@ -42,24 +54,35 @@ function Calculator({ activeProject }) {
     excludedDates,
   } = activeProject
 
-  // Sync number input to project on blur
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  // Mark result as stale whenever any input changes
+  const markStale = () => {
+    if (result) setIsStale(true)
+  }
+
+  // Update project + mark stale
+  const update = (fields) => {
+    updateActiveProject(fields)
+    markStale()
+  }
+
+  // Number inputs: sync on blur
   const handleTotalBlur = () => {
     const val = parseFloat(localTotalValue)
-    if (!isNaN(val) && val > 0) updateActiveProject({ totalValue: val })
+    if (!isNaN(val) && val > 0) update({ totalValue: val })
   }
 
   const handleDailyBlur = () => {
     const val = parseFloat(localDailyValue)
-    if (!isNaN(val) && val > 0) updateActiveProject({ dailyValue: val })
+    if (!isNaN(val) && val > 0) update({ dailyValue: val })
   }
 
-  // Select and date inputs sync immediately
-  const handleSelectChange = (field) => (e) => {
-    updateActiveProject({ [field]: e.target.value })
-  }
+  // Select/date: sync immediately
+  const handleSelectChange = (field) => (e) => update({ [field]: e.target.value })
 
   const toggleDay = (dayValue) => {
-    updateActiveProject({
+    update({
       workingDays: workingDays.includes(dayValue)
         ? workingDays.filter(d => d !== dayValue)
         : [...workingDays, dayValue].sort()
@@ -67,21 +90,21 @@ function Calculator({ activeProject }) {
   }
 
   const toggleExcludedDate = (dateString) => {
-    updateActiveProject({
+    update({
       excludedDates: excludedDates.includes(dateString)
         ? excludedDates.filter(d => d !== dateString)
         : [...excludedDates, dateString].sort()
     })
   }
 
+  // ─── Calculate ────────────────────────────────────────────────────────────
+
   const handleCalculate = () => {
-    // Use local values for calculation in case user hasn't blurred yet
     const totalVal = parseFloat(localTotalValue)
     const dailyVal = parseFloat(localDailyValue)
-
     if (isNaN(totalVal) || isNaN(dailyVal)) return
 
-    // Persist latest values before calculating
+    // Persist latest number values first
     updateActiveProject({ totalValue: totalVal, dailyValue: dailyVal })
 
     const res = calculateFinishDate(
@@ -94,6 +117,7 @@ function Calculator({ activeProject }) {
       excludedDates
     )
     setResult(res)
+    setIsStale(false)
   }
 
   const isDisabled =
@@ -132,15 +156,12 @@ function Calculator({ activeProject }) {
             id="total-time"
             type="number"
             value={localTotalValue}
-            onChange={(e) => setLocalTotalValue(e.target.value)}
+            onChange={(e) => { setLocalTotalValue(e.target.value); markStale() }}
             onBlur={handleTotalBlur}
             min="0"
             step="any"
           />
-          <select
-            value={totalUnit}
-            onChange={handleSelectChange('totalUnit')}
-          >
+          <select value={totalUnit} onChange={handleSelectChange('totalUnit')}>
             {timeUnits.map(unit => (
               <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
@@ -156,15 +177,12 @@ function Calculator({ activeProject }) {
             id="daily-time"
             type="number"
             value={localDailyValue}
-            onChange={(e) => setLocalDailyValue(e.target.value)}
+            onChange={(e) => { setLocalDailyValue(e.target.value); markStale() }}
             onBlur={handleDailyBlur}
             min="0"
             step="any"
           />
-          <select
-            value={dailyUnit}
-            onChange={handleSelectChange('dailyUnit')}
-          >
+          <select value={dailyUnit} onChange={handleSelectChange('dailyUnit')}>
             {timeUnits.map(unit => (
               <option key={unit.value} value={unit.value}>{unit.label}</option>
             ))}
@@ -179,7 +197,7 @@ function Calculator({ activeProject }) {
           id="start-date"
           type="date"
           value={startDate}
-          onChange={(e) => updateActiveProject({ startDate: e.target.value })}
+          onChange={(e) => update({ startDate: e.target.value })}
         />
       </div>
 
@@ -204,20 +222,27 @@ function Calculator({ activeProject }) {
       <ExcludeDate
         excludedDates={excludedDates}
         onToggleDate={toggleExcludedDate}
-        onClearAll={() => updateActiveProject({ excludedDates: [] })}
+        onClearAll={() => update({ excludedDates: [] })}
       />
+
+      {/* Stale banner — shown when inputs changed after last calculation */}
+      {isStale && (
+        <div className="stale-banner">
+          ⚠️ Inputs changed — press Calculate to update the timeline
+        </div>
+      )}
 
       {/* Calculate */}
       <button
-        className="calculate-button"
+        className={`calculate-button ${isStale ? 'calculate-button--stale' : ''}`}
         onClick={handleCalculate}
         disabled={isDisabled}
       >
-        Calculate
+        {isStale ? '🔄 Recalculate' : 'Calculate'}
       </button>
 
-      {/* Results */}
-      {result && (
+      {/* Results — only shown when not stale */}
+      {result && !isStale && (
         <ResultsDisplay
           result={result}
           activeProject={activeProject}
