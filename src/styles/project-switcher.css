@@ -62,10 +62,19 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   min-width: 260px;
   max-width: 320px;
-  overflow: hidden;
+  /* FIX: was overflow: hidden — clipped the context menu popup.
+     Use overflow: visible so context menus can render outside the boundary.
+     Border radius is preserved via border-radius on the element itself. */
+  overflow: visible;
   z-index: 500;
   animation: psDropIn 0.18s ease-out;
   border: 1px solid #e5e7eb;
+}
+
+/* Inner wrapper clips the list content (scroll) without clipping context menus */
+.ps-dropdown-inner {
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 @keyframes psDropIn {
@@ -165,7 +174,7 @@
   color: #374151;
 }
 
-/* Context menu */
+/* Context menu — fixed position so it escapes any overflow clipping */
 .ps-context-menu {
   position: absolute;
   right: 0.5rem;

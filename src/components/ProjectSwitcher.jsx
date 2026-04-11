@@ -101,62 +101,67 @@ function ProjectSwitcher({
         {/* Dropdown */}
         {open && (
           <div className="ps-dropdown">
-            {/* Active projects */}
-            <div className="ps-section-label">Active</div>
-            {activeProjects.length === 0 && (
-              <p className="ps-empty">No active projects</p>
-            )}
-            {activeProjects.map(p => (
-              <ProjectRow
-                key={p.id}
-                project={p}
-                isActive={p.id === activeProject?.id}
-                menuOpen={menuOpenId === p.id}
-                onSelect={() => handleSwitch(p.id)}
-                onToggleMenu={(e) => toggleMenu(e, p.id)}
-                onEdit={() => { setEditingProject(p); setMenuOpenId(null) }}
-                onDuplicate={() => handleDuplicate(p.id)}
-                onArchive={() => handleArchive(p.id)}
-                showArchiveOption={true}
-              />
-            ))}
+            {/* FIX: inner wrapper handles border-radius clipping for the list
+                while the outer .ps-dropdown uses overflow: visible so the
+                context menu popup is never cut off */}
+            <div className="ps-dropdown-inner">
+              {/* Active projects */}
+              <div className="ps-section-label">Active</div>
+              {activeProjects.length === 0 && (
+                <p className="ps-empty">No active projects</p>
+              )}
+              {activeProjects.map(p => (
+                <ProjectRow
+                  key={p.id}
+                  project={p}
+                  isActive={p.id === activeProject?.id}
+                  menuOpen={menuOpenId === p.id}
+                  onSelect={() => handleSwitch(p.id)}
+                  onToggleMenu={(e) => toggleMenu(e, p.id)}
+                  onEdit={() => { setEditingProject(p); setMenuOpenId(null) }}
+                  onDuplicate={() => handleDuplicate(p.id)}
+                  onArchive={() => handleArchive(p.id)}
+                  showArchiveOption={true}
+                />
+              ))}
 
-            {/* Archived section toggle */}
-            {archivedProjects.length > 0 && (
-              <>
-                <button
-                  className="ps-archived-toggle"
-                  onClick={() => setShowArchived(v => !v)}
-                >
-                  <span>Archived ({archivedProjects.length})</span>
-                  <span>{showArchived ? '▲' : '▼'}</span>
-                </button>
+              {/* Archived section toggle */}
+              {archivedProjects.length > 0 && (
+                <>
+                  <button
+                    className="ps-archived-toggle"
+                    onClick={() => setShowArchived(v => !v)}
+                  >
+                    <span>Archived ({archivedProjects.length})</span>
+                    <span>{showArchived ? '▲' : '▼'}</span>
+                  </button>
 
-                {showArchived && archivedProjects.map(p => (
-                  <ProjectRow
-                    key={p.id}
-                    project={p}
-                    isActive={false}
-                    isArchived={true}
-                    menuOpen={menuOpenId === p.id}
-                    onSelect={() => {}} // archived projects not selectable
-                    onToggleMenu={(e) => toggleMenu(e, p.id)}
-                    onEdit={() => { setEditingProject(p); setMenuOpenId(null) }}
-                    onDuplicate={() => handleDuplicate(p.id)}
-                    onUnarchive={() => handleUnarchive(p.id)}
-                    onDelete={() => handleDeleteConfirm(p.id)}
-                    showArchiveOption={false}
-                  />
-                ))}
-              </>
-            )}
+                  {showArchived && archivedProjects.map(p => (
+                    <ProjectRow
+                      key={p.id}
+                      project={p}
+                      isActive={false}
+                      isArchived={true}
+                      menuOpen={menuOpenId === p.id}
+                      onSelect={() => {}}
+                      onToggleMenu={(e) => toggleMenu(e, p.id)}
+                      onEdit={() => { setEditingProject(p); setMenuOpenId(null) }}
+                      onDuplicate={() => handleDuplicate(p.id)}
+                      onUnarchive={() => handleUnarchive(p.id)}
+                      onDelete={() => handleDeleteConfirm(p.id)}
+                      showArchiveOption={false}
+                    />
+                  ))}
+                </>
+              )}
 
-            {/* Divider + New project */}
-            <div className="ps-divider" />
-            <button className="ps-new-btn" onClick={handleCreate}>
-              <span className="ps-new-icon">＋</span>
-              New Project
-            </button>
+              {/* Divider + New project */}
+              <div className="ps-divider" />
+              <button className="ps-new-btn" onClick={handleCreate}>
+                <span className="ps-new-icon">＋</span>
+                New Project
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -209,16 +214,13 @@ function ProjectRow({
       onClick={!isArchived ? onSelect : undefined}
       style={isActive ? { borderLeftColor: project.color } : {}}
     >
-      {/* Left: emoji + name */}
       <span className="ps-row-emoji">{project.emoji}</span>
       <span className="ps-row-name">{project.name}</span>
 
-      {/* Active check */}
       {isActive && (
         <span className="ps-row-check" style={{ color: project.color }}>✓</span>
       )}
 
-      {/* Context menu trigger */}
       <button
         className="ps-row-menu-btn"
         onClick={onToggleMenu}
@@ -227,7 +229,8 @@ function ProjectRow({
         •••
       </button>
 
-      {/* Context menu */}
+      {/* Context menu renders inside ps-row (position: relative),
+          escapes .ps-dropdown-inner clip via ps-dropdown overflow: visible */}
       {menuOpen && (
         <div className="ps-context-menu" onClick={e => e.stopPropagation()}>
           <button onClick={onEdit}>✏️ Rename</button>
