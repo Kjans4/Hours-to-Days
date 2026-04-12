@@ -95,6 +95,15 @@ function migrateLegacyData() {
       result: null
     }
 
+    // FIX #13: clean up the flat legacy keys now that they've been
+    // bundled into the new format. Without this they linger in
+    // localStorage forever, wasting quota on every future page load.
+    const LEGACY_KEYS = [
+      'totalValue', 'totalUnit', 'dailyValue', 'dailyUnit',
+      'startDate', 'workingDays', 'excludedDates', 'dateData'
+    ]
+    LEGACY_KEYS.forEach(k => localStorage.removeItem(k))
+
     return { projects: [legacyProject], activeProjectId: id }
   } catch (e) {
     console.error('Migration error:', e)
@@ -205,7 +214,13 @@ export function useProjects() {
         createdAt: new Date().toISOString(),
         workingDays: [...source.workingDays],
         excludedDates: [...source.excludedDates],
-        dateData: JSON.parse(JSON.stringify(source.dateData || {}))
+        // FIX #14: reset startDate to today — the original's start date
+        // is likely in the past, which would make the finish date appear
+        // in the past too as soon as the user calculates.
+        startDate: new Date().toISOString().split('T')[0],
+        // FIX #14: reset dateData — completed days and notes from the
+        // original project don't belong to the copy.
+        dateData: {},
       }
 
       return {
