@@ -6,14 +6,16 @@
   position: relative;
 }
 
-/* Trigger button */
+/* Trigger button
+   FIX #11: border now uses a CSS variable so :hover can override it
+   cleanly without the inline style winning the specificity war. */
 .project-switcher-trigger {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
   background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--project-color, rgba(255, 255, 255, 0.3));
   border-radius: 10px;
   color: white;
   font-size: 0.875rem;
@@ -62,15 +64,35 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   min-width: 260px;
   max-width: 320px;
+  /* FIX #8: overflow must be visible so the context menu (position:absolute
+     inside a row) is never clipped by this container. Rounded corners are
+     handled per-child below instead. */
   overflow: visible;
   z-index: 500;
   animation: psDropIn 0.18s ease-out;
   border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Inner wrapper clips the list content to rounded corners */
-.ps-dropdown-inner {
-  border-radius: 14px;
+/* FIX #8 + #15: Scrollable list area — separated from the sticky footer
+   so the New Project button is always reachable and the context menu
+   (absolutely positioned) can escape the scroll container via overflow:visible. */
+.ps-dropdown-list {
+  border-radius: 14px 14px 0 0;
+  overflow-x: hidden;
+  /* FIX #15: cap height so the list scrolls on many projects */
+  max-height: min(400px, 65vh);
+  overflow-y: auto;
+  /* Clip rounded top corners without hiding the context menu —
+     the context menu escapes sideways, not through the top. */
+}
+
+/* Sticky footer holds the New Project button outside the scroll area */
+.ps-dropdown-footer {
+  border-radius: 0 0 14px 14px;
+  background: white;
+  border-top: 0.5px solid #f3f4f6;
   overflow: hidden;
 }
 
@@ -186,16 +208,14 @@
   border-radius: 10px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
   border: 1px solid #e5e7eb;
-  z-index: 700;
+  /* FIX #5: raised above the dropdown (500) and modal (1000) layers.
+     Context menu must always be on top of the list it belongs to. */
+  z-index: 600;
   overflow: hidden;
   min-width: 160px;
   animation: psDropIn 0.15s ease-out;
 }
 
-/**
- * Flip modifier — opens upward when there's not enough space below.
- * Applied via JS measurement in ProjectRow's useEffect.
- */
 .ps-context-menu--flip {
   top: auto;
   bottom: 100%;
@@ -276,7 +296,6 @@
 .ps-divider {
   height: 1px;
   background: #f3f4f6;
-  margin: 0.25rem 0;
 }
 
 /* New project button */
@@ -383,9 +402,13 @@
     padding: 0.375rem 0.625rem;
   }
 
+  /* FIX #7: On small screens align dropdown to left edge of trigger
+     so it doesn't overflow off the right side of the screen. */
   .ps-dropdown {
-    right: -0.5rem;
+    right: auto;
+    left: 0;
     min-width: 240px;
+    max-width: calc(100vw - 1rem);
   }
 
   .ps-context-menu {

@@ -20,7 +20,9 @@ function ProjectSwitcher({
 
   const dropdownRef = useRef(null)
 
-  // Close dropdown on outside click
+  // FIX #4: Listen on both mousedown (desktop) AND touchstart (mobile).
+  // Previously only mousedown was used, so tapping outside on a phone
+  // never closed the dropdown.
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -29,7 +31,11 @@ function ProjectSwitcher({
       }
     }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
   }, [])
 
   const activeProjects = projects.filter(p => !p.archived)
@@ -62,6 +68,7 @@ function ProjectSwitcher({
   const handleArchive = (id) => {
     onArchive(id)
     setMenuOpenId(null)
+    setOpen(false) // FIX #10: also close dropdown after archiving
   }
 
   const handleUnarchive = (id) => {
@@ -91,7 +98,7 @@ function ProjectSwitcher({
         <button
           className="project-switcher-trigger"
           onClick={() => setOpen(prev => !prev)}
-          style={{ borderColor: activeProject?.color || '#2563eb' }}
+          style={{ '--project-color': activeProject?.color || '#2563eb' }}
         >
           <span className="ps-emoji">{activeProject?.emoji || '🚀'}</span>
           <span className="ps-name">{activeProject?.name || 'Select Project'}</span>
@@ -101,7 +108,10 @@ function ProjectSwitcher({
         {/* Dropdown */}
         {open && (
           <div className="ps-dropdown">
-            <div className="ps-dropdown-inner">
+            {/* FIX #8: Removed overflow:hidden from ps-dropdown-inner (in CSS).
+                The scrollable list and sticky footer are now separated so the
+                context menu is never clipped. */}
+            <div className="ps-dropdown-list">
               {/* Active projects */}
               <div className="ps-section-label">Active</div>
               {activeProjects.length === 0 && (
@@ -151,8 +161,11 @@ function ProjectSwitcher({
                   ))}
                 </>
               )}
+            </div>
 
-              {/* Divider + New project */}
+            {/* FIX #8 + #15: Sticky footer outside the scrollable list.
+                The New Project button is always visible and never clipped. */}
+            <div className="ps-dropdown-footer">
               <div className="ps-divider" />
               <button className="ps-new-btn" onClick={handleCreate}>
                 <span className="ps-new-icon">＋</span>
@@ -208,18 +221,13 @@ function ProjectRow({
   const menuBtnRef = useRef(null)
   const [flipUp, setFlipUp] = useState(false)
 
-  /**
-   * When the context menu opens, measure how much space is below the button
-   * vs above. If there's not enough room below, flip the menu upward.
-   * This prevents it rendering off-screen on mobile.
-   */
   useEffect(() => {
     if (!menuOpen || !menuBtnRef.current) {
       setFlipUp(false)
       return
     }
     const btnRect = menuBtnRef.current.getBoundingClientRect()
-    const estimatedMenuHeight = 180 // ~44px per item × 4 items
+    const estimatedMenuHeight = 180
     const spaceBelow = window.innerHeight - btnRect.bottom
     const spaceAbove = btnRect.top
     setFlipUp(spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow)
