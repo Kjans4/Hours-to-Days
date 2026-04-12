@@ -13,8 +13,15 @@ function generateId() {
 }
 
 function generateName(projects) {
-  const activeCount = projects.filter(p => !p.archived).length
-  return `Project ${activeCount + 1}`
+  // Find the highest existing "Project N" number across ALL projects
+  // (active + archived) so we never produce a duplicate name.
+  // e.g. if "Project 1" and "Project 2" exist, next is "Project 3"
+  // even if "Project 1" is archived.
+  const highest = projects.reduce((max, p) => {
+    const match = p.name.match(/^Project (\d+)$/)
+    return match ? Math.max(max, parseInt(match[1], 10)) : max
+  }, 0)
+  return `Project ${highest + 1}`
 }
 
 function createBlankProject(name, existingProjects = []) {
@@ -242,10 +249,33 @@ export function useProjects() {
 
   // ─── Delete (permanent, archived only) ────────────────────────────────────
   const deleteProject = (id) => {
-    update(s => ({
-      ...s,
-      projects: s.projects.filter(p => p.id !== id)
-    }))
+    update(s => {
+      const remaining = s.projects.filter(p => p.id !== id)
+
+      // Guard: if the deleted project was somehow the active one,
+      // switch to the first remaining project. If nothing is left
+      // (shouldn't happen — UI only shows delete on archived projects —
+      // but defensive just in case), create a fresh blank project so
+      // activeProjectId never points at a non-existent ID.
+      let nextActiveId = s.activeProjectId
+      if (id === s.activeProjectId) {
+        const next = remaining.find(p => !p.archived)
+        if (next) {
+          nextActiveId = next.id
+        } else if (remaining.length > 0) {
+          // Only archived projects left — pick the first one and unarchive it
+          remaining[0] = { ...remaining[0], archived: false }
+          nextActiveId = remaining[0].id
+        } else {
+          // Nothing left at all — create a blank project
+          const fresh = createBlankProject('Project 1', [])
+          remaining.push(fresh)
+          nextActiveId = fresh.id
+        }
+      }
+
+      return { projects: remaining, activeProjectId: nextActiveId }
+    })
   }
 
   return {
