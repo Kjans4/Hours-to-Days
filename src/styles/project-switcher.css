@@ -6,7 +6,7 @@
  * Z-INDEX SCALE
  *  100  sticky header
  *  200  dropdown panel          ← .ps-dropdown
- *  300  portal context menu     ← .ps-context-menu--portal (set inline)
+ *  300  portal context menu     ← inline style on portal element
  *  400  mobile bottom nav
  *  500  confirm backdrop        ← .ps-confirm-backdrop
  *  600  confirm dialog          ← .ps-confirm
@@ -19,8 +19,8 @@
 }
 
 /* Trigger button
-   Uses a CSS custom property for the border color so :hover can
-   override it cleanly — inline styles would win the specificity war. */
+   Uses a CSS custom property so :hover can override the border color
+   cleanly — inline styles would win the specificity war. */
 .project-switcher-trigger {
   display: flex;
   align-items: center;
@@ -41,6 +41,12 @@
 .project-switcher-trigger:hover {
   background: rgba(255, 255, 255, 0.25);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* FIX #12: visible focus ring on trigger for keyboard users */
+.project-switcher-trigger:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
 }
 
 .ps-emoji {
@@ -77,10 +83,10 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   min-width: 260px;
   max-width: 320px;
-  /* FIX #8: overflow:visible so the portal-based context menu measurement
-     works correctly. The menu itself no longer lives inside this element. */
+  /* overflow:visible so the portal-based context menu measurement works.
+     The context menu no longer lives inside this element. */
   overflow: visible;
-  /* FIX #5: z-index 200 — below portal context menu (300) and confirm (500) */
+  /* z-index 200 — below portal context menu (300) and confirm (500) */
   z-index: 200;
   animation: psDropIn 0.18s ease-out;
   border: 1px solid #e5e7eb;
@@ -88,8 +94,8 @@
   flex-direction: column;
 }
 
-/* FIX #7: On small screens the dropdown is anchored right:0 which can push
-   it off the left edge. Switch to left:0 and clamp width to the viewport. */
+/* FIX #7: On small screens switch to left-aligned so the dropdown never
+   exits the left edge of the viewport. */
 @media (max-width: 480px) {
   .ps-dropdown {
     right: auto;
@@ -99,8 +105,8 @@
   }
 }
 
-/* Scrollable list — capped so many projects don't push it off screen.
-   FIX #8: The context menu no longer lives here, so overflow:auto is safe. */
+/* FIX #15: Scrollable list with a max-height so many projects don't
+   push the dropdown off-screen. Context menu escapes via portal. */
 .ps-dropdown-list {
   border-radius: 14px 14px 0 0;
   overflow-x: hidden;
@@ -108,7 +114,7 @@
   max-height: min(400px, 65vh);
 }
 
-/* Sticky footer — always visible outside the scroll area */
+/* Sticky footer — always visible, never scrolled away */
 .ps-dropdown-footer {
   border-radius: 0 0 14px 14px;
   background: white;
@@ -151,6 +157,8 @@
   transition: background 0.15s;
   position: relative;
   border-left: 3px solid transparent;
+  /* FIX #12: remove default focus outline — we apply our own below */
+  outline: none;
 }
 
 .ps-row:hover {
@@ -163,13 +171,33 @@
   border-left-style: solid;
 }
 
+/* FIX #9: cursor:not-allowed makes it immediately obvious the row
+   can't be selected. Combined with the tooltip and archived badge,
+   users get three layers of feedback instead of silent nothing. */
 .ps-row--archived {
   opacity: 0.65;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .ps-row--archived:hover {
   background: transparent;
+}
+
+/* FIX #12: focus ring for keyboard navigation — shown when row is
+   focused via ArrowUp/ArrowDown or Tab. Uses outline-offset so the
+   ring appears inside the row boundary. */
+.ps-row--focused,
+.ps-row:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  background: #eff6ff;
+}
+
+/* Archived focused row — keep not-allowed cursor even when focused */
+.ps-row--archived.ps-row--focused,
+.ps-row--archived:focus-visible {
+  background: transparent;
+  outline-color: #9ca3af;
 }
 
 .ps-row-emoji {
@@ -193,6 +221,22 @@
   font-size: 0.9rem;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+/* FIX #9: small pill badge on archived rows so users immediately know
+   why clicking does nothing — no more silent no-op. */
+.ps-row-archived-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ••• button */
@@ -221,16 +265,14 @@
   color: #374151;
 }
 
+/* FIX #12: focus ring on ••• button */
+.ps-row-menu-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
 /* ── Context menu (portal-rendered, position set inline) ────────────────── */
-/*
- * FIX #8: This element is rendered via React.createPortal into document.body,
- * so it is NEVER inside the overflow:auto scroll container. It cannot be
- * clipped. Position (top/bottom/right) is calculated from the ••• button's
- * getBoundingClientRect() and applied as inline styles on the element.
- *
- * FIX #5: z-index is set inline to 300 — above the dropdown (200) and below
- * the confirm backdrop (500) and full modals (1000).
- */
+
 .ps-context-menu {
   background: white;
   border-radius: 10px;
@@ -265,6 +307,13 @@
 
 .ps-context-menu button:active {
   background: #f3f4f6;
+}
+
+/* FIX #12: focus ring inside context menu */
+.ps-context-menu button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  background: #eff6ff;
 }
 
 .ps-menu-delete {
@@ -358,7 +407,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  /* FIX #5: 500 — above portal context menu (300), below full modals (1000) */
+  /* z-index 500 — above portal context menu (300), below full modals (1000) */
   z-index: 500;
   display: flex;
   align-items: center;
@@ -372,7 +421,7 @@
   max-width: 360px;
   width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-  /* FIX #5: 600 — sits above the backdrop it belongs to */
+  /* z-index 600 — sits above the backdrop it belongs to */
   z-index: 600;
   position: relative;
 }

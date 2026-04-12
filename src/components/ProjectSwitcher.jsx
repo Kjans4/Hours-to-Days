@@ -7,16 +7,12 @@ import ProjectModal from './ProjectModal'
  *
  *  100  — sticky header / sub-nav
  *  200  — dropdown panel
- *  300  — context menu (must clear the scroll container)
+ *  300  — context menu (portal-rendered)
  *  400  — bottom nav (mobile)
  *  500  — confirm backdrop
  *  600  — confirm dialog
  * 1000  — full modals (auth, note)
  * 2000  — toasts
- *
- * Previously: dropdown=500, context=600, confirm=1000, modals=1000, toasts=2000
- * Problem: confirm and modals shared z-index 1000, context menu at 600 could
- * bleed through the confirm backdrop at 1000 in some browser paint orders.
  */
 
 function ProjectSwitcher({
@@ -35,21 +31,20 @@ function ProjectSwitcher({
   const [editingProject, setEditingProject] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
-
-  // FIX #8: context menu position measured in viewport coords so it can
-  // be rendered via a portal — escaping the scroll container entirely.
   const [contextMenuPos, setContextMenuPos] = useState(null)
 
-  const dropdownRef = useRef(null)
+  // FIX #12: track focused row index for arrow key navigation
+  const [focusedIndex, setFocusedIndex] = useState(-1)
 
-  // FIX #4: listen on touchstart (mobile) AND mousedown (desktop).
-  // Previously only mousedown — dropdown never closed on mobile tap-outside.
+  const dropdownRef = useRef(null)
+  const triggerRef = useRef(null)
+  const rowRefs = useRef([])
+
+  // FIX #4: listen on touchstart (mobile) AND mousedown (desktop)
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false)
-        setMenuOpenId(null)
-        setContextMenuPos(null)
+        closeAll()
       }
     }
     document.addEventListener('mousedown', handler)
@@ -60,8 +55,7 @@ function ProjectSwitcher({
     }
   }, [])
 
-  // Close context menu on scroll (it's portal-positioned, so it won't
-  // follow the dropdown if the user scrolls the list).
+  // Close context menu when user scrolls the list
   useEffect(() => {
     if (!menuOpenId) return
     const handler = () => {
@@ -72,40 +66,52 @@ function ProjectSwitcher({
     return () => window.removeEventListener('scroll', handler, true)
   }, [menuOpenId])
 
-  const activeProjects = projects.filter(p => !p.archived)
-  const archivedProjects = projects.filter(p => p.archived)
+  // FIX #12: move focus to the newly focused row whenever focusedIndex changes
+  useEffect(() => {
+    if (focusedIndex >= 0 && rowRefs.current[focusedIndex]) {
+      rowRefs.current[focusedIndex].focus()
+    }
+  }, [focusedIndex])
 
-  const handleSwitch = (id) => {
-    onSwitch(id)
+  const closeAll = () => {
     setOpen(false)
     setMenuOpenId(null)
     setContextMenuPos(null)
+    setFocusedIndex(-1)
+  }
+
+  const activeProjects = projects.filter(p => !p.archived)
+  const archivedProjects = projects.filter(p => p.archived)
+
+  // All rows visible in the list (active + expanded archived)
+  const visibleRows = showArchived
+    ? [...activeProjects, ...archivedProjects]
+    : activeProjects
+
+  const handleSwitch = (id) => {
+    onSwitch(id)
+    closeAll()
+    triggerRef.current?.focus()
   }
 
   const handleCreate = () => {
     onCreate()
-    setOpen(false)
+    closeAll()
   }
 
   const handleEditSave = ({ name, emoji, color }) => {
-    if (editingProject) {
-      onUpdate(editingProject.id, { name, emoji, color })
-    }
+    if (editingProject) onUpdate(editingProject.id, { name, emoji, color })
     setEditingProject(null)
   }
 
   const handleDuplicate = (id) => {
     onDuplicate(id)
-    setMenuOpenId(null)
-    setContextMenuPos(null)
-    setOpen(false)
+    closeAll()
   }
 
   const handleArchive = (id) => {
     onArchive(id)
-    setMenuOpenId(null)
-    setContextMenuPos(null)
-    setOpen(false)
+    closeAll()
   }
 
   const handleUnarchive = (id) => {
@@ -125,10 +131,6 @@ function ProjectSwitcher({
     setConfirmDeleteId(null)
   }
 
-  // FIX #8: Instead of toggling a menu inside the clipped scroll container,
-  // we measure the ••• button's viewport position and pass it down so
-  // ProjectRow can call back with real coordinates. The menu is then
-  // rendered via a portal at those coordinates — outside any overflow:hidden.
   const toggleMenu = useCallback((e, id, btnRect) => {
     e.stopPropagation()
 
@@ -140,13 +142,10 @@ function ProjectSwitcher({
 
     setMenuOpenId(id)
 
-    // FIX #5 + #8: Calculate position in viewport coords.
-    // Prefer opening downward; flip upward if not enough space below.
-    const menuHeight = 180 // ~44px × 4 items estimated
+    const menuHeight = 180
     const spaceBelow = window.innerHeight - btnRect.bottom
     const openUpward = spaceBelow < menuHeight && btnRect.top > spaceBelow
 
-    // FIX #7: clamp left so menu never exits the right viewport edge.
     const menuWidth = 180
     const rawRight = window.innerWidth - btnRect.right
     const clampedRight = Math.max(8, Math.min(rawRight, window.innerWidth - menuWidth - 8))
@@ -158,21 +157,79 @@ function ProjectSwitcher({
     })
   }, [menuOpenId])
 
-  // The portal-rendered context menu content, shared by active + archived rows.
+  // FIX #12: keyboard handler on the dropdown container
+  const handleDropdownKeyDown = (e) => {
+    if (!open) return
+
+    switch (e.key) {
+      case 'Escape':
+        // Close everything and return focus to trigger
+        e.preventDefault()
+        closeAll()
+        triggerRef.current?.focus()
+        break
+
+      case 'ArrowDown':
+        e.preventDefault()
+        setFocusedIndex(prev =>
+          prev < visibleRows.length - 1 ? prev + 1 : 0
+        )
+        break
+
+      case 'ArrowUp':
+        e.preventDefault()
+        setFocusedIndex(prev =>
+          prev > 0 ? prev - 1 : visibleRows.length - 1
+        )
+        break
+
+      case 'Enter':
+      case ' ':
+        // Select the focused row if it's not archived
+        if (focusedIndex >= 0) {
+          const row = visibleRows[focusedIndex]
+          if (row && !row.archived) {
+            e.preventDefault()
+            handleSwitch(row.id)
+          }
+        }
+        break
+
+      case 'Tab':
+        // Tab out — close the dropdown
+        closeAll()
+        break
+
+      default:
+        break
+    }
+  }
+
   const openMenuProject = projects.find(p => p.id === menuOpenId)
   const isOpenMenuArchived = openMenuProject?.archived ?? false
 
   return (
     <>
-      <div className="project-switcher" ref={dropdownRef}>
+      <div
+        className="project-switcher"
+        ref={dropdownRef}
+        onKeyDown={handleDropdownKeyDown}
+      >
         {/* Trigger */}
         <button
+          ref={triggerRef}
           className="project-switcher-trigger"
           onClick={() => {
-            setOpen(prev => !prev)
+            setOpen(prev => {
+              if (prev) closeAll()
+              return !prev
+            })
             setMenuOpenId(null)
             setContextMenuPos(null)
           }}
+          // FIX #12: aria-expanded tells screen readers whether the list is open
+          aria-expanded={open}
+          aria-haspopup="listbox"
           style={{ '--project-color': activeProject?.color || '#2563eb' }}
         >
           <span className="ps-emoji">{activeProject?.emoji || '🚀'}</span>
@@ -182,22 +239,27 @@ function ProjectSwitcher({
 
         {/* Dropdown */}
         {open && (
-          <div className="ps-dropdown">
-            {/* FIX #8: scrollable list — overflow-y:auto here, but context
-                menu escapes via portal so it is never clipped */}
+          // FIX #12: role="listbox" so screen readers treat this as a selector
+          <div className="ps-dropdown" role="listbox" aria-label="Projects">
+            {/* Scrollable list — context menu escapes via portal */}
             <div className="ps-dropdown-list">
               <div className="ps-section-label">Active</div>
+
               {activeProjects.length === 0 && (
                 <p className="ps-empty">No active projects</p>
               )}
-              {activeProjects.map(p => (
+
+              {activeProjects.map((p, i) => (
                 <ProjectRow
                   key={p.id}
+                  ref={el => rowRefs.current[i] = el}
                   project={p}
                   isActive={p.id === activeProject?.id}
                   menuOpen={menuOpenId === p.id}
+                  isFocused={focusedIndex === i}
                   onSelect={() => handleSwitch(p.id)}
                   onToggleMenu={toggleMenu}
+                  onFocus={() => setFocusedIndex(i)}
                 />
               ))}
 
@@ -211,17 +273,25 @@ function ProjectSwitcher({
                     <span>{showArchived ? '▲' : '▼'}</span>
                   </button>
 
-                  {showArchived && archivedProjects.map(p => (
-                    <ProjectRow
-                      key={p.id}
-                      project={p}
-                      isActive={false}
-                      isArchived={true}
-                      menuOpen={menuOpenId === p.id}
-                      onSelect={() => {}}
-                      onToggleMenu={toggleMenu}
-                    />
-                  ))}
+                  {showArchived && archivedProjects.map((p, i) => {
+                    const rowIndex = activeProjects.length + i
+                    return (
+                      <ProjectRow
+                        key={p.id}
+                        ref={el => rowRefs.current[rowIndex] = el}
+                        project={p}
+                        isActive={false}
+                        isArchived={true}
+                        menuOpen={menuOpenId === p.id}
+                        isFocused={focusedIndex === rowIndex}
+                        // FIX #9: archived rows pass a no-op but show a
+                        // tooltip explaining they must be restored first
+                        onSelect={() => {}}
+                        onToggleMenu={toggleMenu}
+                        onFocus={() => setFocusedIndex(rowIndex)}
+                      />
+                    )
+                  })}
                 </>
               )}
             </div>
@@ -237,14 +307,11 @@ function ProjectSwitcher({
         )}
       </div>
 
-      {/* FIX #8: Context menu rendered via portal — completely outside the
-          scroll container, so overflow:hidden can never clip it.
-          FIX #5: z-index 300 sits cleanly above the dropdown (200) and
-          below the confirm backdrop (500) and full modals (1000). */}
+      {/* Context menu — portal-rendered, never clipped by overflow */}
       {menuOpenId && contextMenuPos && openMenuProject &&
         createPortal(
           <div
-            className="ps-context-menu ps-context-menu--portal"
+            className="ps-context-menu"
             style={{
               position: 'fixed',
               right: contextMenuPos.right,
@@ -296,7 +363,7 @@ function ProjectSwitcher({
         onSave={handleEditSave}
       />
 
-      {/* Delete confirm — z-index 500/600 in CSS, above everything except full modals */}
+      {/* Delete confirm */}
       {confirmDeleteId && (
         <div className="ps-confirm-backdrop" onClick={() => setConfirmDeleteId(null)}>
           <div className="ps-confirm" onClick={e => e.stopPropagation()}>
@@ -315,18 +382,21 @@ function ProjectSwitcher({
 }
 
 // ─── Project Row ──────────────────────────────────────────────────────────────
-// Simplified — no longer manages its own menu open state or flip logic.
-// It just calls onToggleMenu with the button's bounding rect so the parent
-// can position the portal-rendered context menu accurately.
+// Uses forwardRef so the parent can focus rows programmatically for
+// keyboard navigation (Bug #12).
 
-function ProjectRow({
+import { forwardRef } from 'react'
+
+const ProjectRow = forwardRef(function ProjectRow({
   project,
   isActive,
   isArchived,
   menuOpen,
+  isFocused,
   onSelect,
   onToggleMenu,
-}) {
+  onFocus,
+}, ref) {
   const menuBtnRef = useRef(null)
 
   const handleMenuClick = (e) => {
@@ -336,11 +406,37 @@ function ProjectRow({
     }
   }
 
+  const handleClick = () => {
+    if (isArchived) return
+    onSelect()
+  }
+
   return (
     <div
-      className={`ps-row ${isActive ? 'ps-row--active' : ''} ${isArchived ? 'ps-row--archived' : ''}`}
-      onClick={!isArchived ? onSelect : undefined}
+      ref={ref}
+      className={[
+        'ps-row',
+        isActive   ? 'ps-row--active'   : '',
+        isArchived ? 'ps-row--archived' : '',
+        isFocused  ? 'ps-row--focused'  : '',
+      ].filter(Boolean).join(' ')}
+      // FIX #12: tabIndex makes rows focusable via keyboard
+      tabIndex={0}
+      role="option"
+      aria-selected={isActive}
+      onClick={handleClick}
+      onFocus={onFocus}
+      onKeyDown={(e) => {
+        // Enter/Space on a row selects it (if not archived)
+        if ((e.key === 'Enter' || e.key === ' ') && !isArchived) {
+          e.preventDefault()
+          onSelect()
+        }
+      }}
       style={isActive ? { borderLeftColor: project.color } : {}}
+      // FIX #9: archived rows show a tooltip explaining they are not selectable.
+      // Users who tap an archived row get immediate feedback instead of silence.
+      title={isArchived ? 'Restore this project first to switch to it' : undefined}
     >
       <span className="ps-row-emoji">{project.emoji}</span>
       <span className="ps-row-name">{project.name}</span>
@@ -349,16 +445,24 @@ function ProjectRow({
         <span className="ps-row-check" style={{ color: project.color }}>✓</span>
       )}
 
+      {/* FIX #9: archived badge — makes it instantly clear the row is inactive */}
+      {isArchived && (
+        <span className="ps-row-archived-badge">archived</span>
+      )}
+
       <button
         ref={menuBtnRef}
         className={`ps-row-menu-btn ${menuOpen ? 'ps-row-menu-btn--active' : ''}`}
         onClick={handleMenuClick}
+        // Stop Enter/Space on the ••• button from bubbling to the row's keydown
+        onKeyDown={e => e.stopPropagation()}
         title="More options"
+        aria-label={`More options for ${project.name}`}
       >
         •••
       </button>
     </div>
   )
-}
+})
 
 export default ProjectSwitcher
